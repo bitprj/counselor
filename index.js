@@ -2,6 +2,7 @@
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
+import cors from 'cors';
  var yamlfile;
  var configyml;
  var count = 0;
@@ -184,6 +185,7 @@ module.exports = (app, { getRouter }) => {
     extended: true
   }));
   router.use(bodyParser.json());
+  router.use(cors());
 
   // Add a new route
   router.post("/post", (req, res) => {

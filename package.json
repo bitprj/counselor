@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
     "js-yaml": "^4.0.0",
     "probot": "^11.0.5",
     "ruby": "^0.6.1"
