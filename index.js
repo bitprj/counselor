@@ -13,7 +13,7 @@ module.exports = (app) => {
  var start = "";
  app.log.info("Yay, the app was loaded!");
  app.on("repository", async (context) => {
-   app.log.info("Pushed")
+   app.log.info("Pushed" + context)
    try {
     var yamlfile = await context.octokit.repos.getContent({
       owner: context.payload.repository.owner.login,
