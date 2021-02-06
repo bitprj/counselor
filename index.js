@@ -14,6 +14,7 @@ module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
    app.log.info("Pushed")
+   app.log.info(context.payload.repository.owner.login, context.payload.repository.name)
    try {
     var yamlfile = await context.octokit.repos.getContent({
       owner: context.payload.repository.owner.login,
@@ -22,6 +23,7 @@ module.exports = (app) => {
     });
     app.log.info("Attempting to get YAML")
    } catch (e) {
+     console.log(e)
     return
    }
   
