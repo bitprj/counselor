@@ -191,6 +191,6 @@ module.exports = (app, { getRouter }) => {
  router.post("/post", (req, res) => {
    const accessToken = req.body.accesstoken
    var lab = req.body.lab
-   res.send("Thank you! We are cloning your repository.");
+   res.json({status: 'cloning started'});
  });
 };
