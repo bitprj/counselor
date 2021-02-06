@@ -17,7 +17,7 @@ module.exports = (app) => {
    try {
     var yamlfile = await context.octokit.repos.getContent({
       owner: context.payload.repository.owner.login,
-      repo: context.payload.repository.name,
+      repo: context.payload.repository,
       path:".bit/config.yml",
     });
     app.log.info("Attempting to get YAML")
