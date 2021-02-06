@@ -192,12 +192,17 @@ module.exports = (app, { getRouter }) => {
    const accessToken = req.body.accesstoken
    var lab = req.body.lab
    res.json({status: 'cloning started'});
+   cloneRepo(accessToken)
+ });
+};
 
+async function cloneRepo(accessToken) {
   const octokit = new Octokit({
     auth: accessToken
   });
    //clone repo
    let username = await octokit.request('GET /user')
+   console.log(username)
    await octokit.request('POST /repos/{template_owner}/{template_repo}/generate', {
     template_owner: 'emsesc',
     template_repo: 'slackapps-template',
@@ -208,7 +213,4 @@ module.exports = (app, { getRouter }) => {
       ]
     }
   })
- });
-};
-
-async function cloneRepo()
+}
