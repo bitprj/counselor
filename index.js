@@ -2,12 +2,10 @@
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-const { Octokit } = require("@octokit/core");
-var cors = require('cors');
 var yamlfile;
 var configyml;
 var count = 0;
-var bodyParser = require('body-parser');
+
 const yaml = require('js-yaml');
 
 module.exports = (app) => {
@@ -17,58 +15,54 @@ module.exports = (app) => {
  app.on("push", async (context) => {
    app.log.info("Pushed")
    try {
-     start = context.payload.commits[2].added[0].substring(0,4)
+    var yamlfile = await context.octokit.repos.getContent({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      path:".bit/config.yml",
+    });
+    app.log.info("Attempting to get YAML")
    } catch (e) {
-     start = ""
+     process.exit()
    }
-   if (start == ".bit") {
-     app.log.info("Template repository cloned.")
-     let yamlfile = await context.octokit.repos.getContent({
-       owner: context.payload.repository.owner.login,
-       repo: context.payload.repository.name,
-       path:".bit/config.yml",
-     });
-     app.log.info("Attempting to get YAML")
- 
-     yamlfile = Buffer.from(yamlfile.data.content, 'base64').toString()
-     try {
-       let fileContents = yamlfile
-       configyml = yaml.load(fileContents);
-     } catch (e) {
-       console.log("ERROR: " + e);
-     }
- 
-     // start lab by executing what is in the before portion of config.yml
-     let response = await context.octokit.repos.getContent({
-       owner: context.payload.repository.owner.login,
-       repo: context.payload.repository.name,
-       path:`.bit/responses/${configyml.before[0].body}`,
-     });
- 
-     await context.octokit.repos.createOrUpdateFileContents({
-       owner: context.payload.repository.owner.login,
-       repo: context.payload.repository.name,
-       path: ".camp",
-       message: "Update progress",
-       content: Buffer.from("0").toString('base64'),
-       committer: {
-         name: `bitcampdev`,
-         email: "info@bitproject.org",
-       },
-       author: {
-         name: `bitcampdev`,
-         email: "info@bitproject.org",
-       },
-     })
- 
-     response = Buffer.from(response.data.content, 'base64').toString()
-     return await context.octokit.issues.create({
-       owner: context.payload.repository.owner.login,
-       repo: context.payload.repository.name,
-       title: configyml.before[0].title,
-       body: response,
-     })
-   }
+  
+    yamlfile = Buffer.from(yamlfile.data.content, 'base64').toString()
+    try {
+      let fileContents = yamlfile
+      configyml = yaml.load(fileContents);
+    } catch (e) {
+      console.log("ERROR: " + e);
+    }
+
+    // start lab by executing what is in the before portion of config.yml
+    let response = await context.octokit.repos.getContent({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      path:`.bit/responses/${configyml.before[0].body}`,
+    });
+
+    await context.octokit.repos.createOrUpdateFileContents({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      path: ".camp",
+      message: "Update progress",
+      content: Buffer.from("0").toString('base64'),
+      committer: {
+        name: `bitcampdev`,
+        email: "info@bitproject.org",
+      },
+      author: {
+        name: `bitcampdev`,
+        email: "info@bitproject.org",
+      },
+    })
+
+    response = Buffer.from(response.data.content, 'base64').toString()
+    return await context.octokit.issues.create({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      title: configyml.before[0].title,
+      body: response,
+    })
  });
 
 
@@ -174,45 +168,3 @@ module.exports = (app) => {
    }
  });
 };
-
-module.exports = (app, { getRouter }) => {
- // Get an express router to expose new HTTP endpoints
- const router = getRouter("/api");
-
- // Use any middleware
- router.use(require("express").static("public"));
- router.use(bodyParser.urlencoded({
-   extended: true
- }));
- router.use(bodyParser.json());
- router.use(cors());
-
- // Add a new route
- router.post("/post", (req, res) => {
-   const accessToken = req.body.accesstoken
-   var lab = req.body.lab
-   app.log.info("Starting!")
-   cloneRepo(accessToken)
-   res.json({status: 'cloning started'});
- });
-};
-
-async function cloneRepo(accessToken) {
-  const octokit = new Octokit({
-    auth: accessToken
-  });
-   //clone repo
-   app.log.info("Cloning repo")
-   let username = await octokit.request('GET /user')
-   console.log(username)
-   await octokit.request('POST /repos/{template_owner}/{template_repo}/generate', {
-    template_owner: 'emsesc',
-    template_repo: 'slackapps-template',
-    name: username.login,
-    mediaType: {
-      previews: [
-        'baptiste'
-      ]
-    }
-  })
-}
