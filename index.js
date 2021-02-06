@@ -191,8 +191,9 @@ module.exports = (app, { getRouter }) => {
  router.post("/post", (req, res) => {
    const accessToken = req.body.accesstoken
    var lab = req.body.lab
-   res.json({status: 'cloning started'});
+   app.log.info("Starting!")
    cloneRepo(accessToken)
+   res.json({status: 'cloning started'});
  });
 };
 
@@ -201,6 +202,7 @@ async function cloneRepo(accessToken) {
     auth: accessToken
   });
    //clone repo
+   app.log.info("Cloning repo")
    let username = await octokit.request('GET /user')
    console.log(username)
    await octokit.request('POST /repos/{template_owner}/{template_repo}/generate', {
