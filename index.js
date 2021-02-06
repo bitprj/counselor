@@ -2,9 +2,8 @@
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-import { Octokit } from "@octokit/core";
-
- var cors = require('cors');
+const { Octokit } = require("@octokit/core");
+var cors = require('cors');
 var yamlfile;
 var configyml;
 var count = 0;
