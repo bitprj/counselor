@@ -2,12 +2,13 @@
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-var cors = require('cors');
+import { Octokit } from "@octokit/core";
+
+ var cors = require('cors');
 var yamlfile;
 var configyml;
 var count = 0;
 var bodyParser = require('body-parser');
-
 const yaml = require('js-yaml');
 
 module.exports = (app) => {
@@ -192,5 +193,23 @@ module.exports = (app, { getRouter }) => {
    const accessToken = req.body.accesstoken
    var lab = req.body.lab
    res.json({status: 'cloning started'});
+
+  const octokit = new Octokit({
+    auth: accessToken
+  });
+   //clone repo
+   let username = await octokit.request('GET /user')
+   await octokit.request('POST /repos/{template_owner}/{template_repo}/generate', {
+    template_owner: 'emsesc',
+    template_repo: 'slackapps-template',
+    name: username.login,
+    mediaType: {
+      previews: [
+        'baptiste'
+      ]
+    }
+  })
  });
 };
+
+async function cloneRepo()
