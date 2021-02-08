@@ -2,9 +2,13 @@
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-var yamlfile;
 var configyml;
+var yamlfile;
+var progressFile;
 var count = 0;
+var o = {}
+var key = "Progress"
+o[key] = []
 
 const yaml = require('js-yaml');
 
@@ -24,7 +28,7 @@ module.exports = (app) => {
     app.log.info("Attempting to get YAML")
    } catch (e) {
      console.log(e)
-    return
+      return
    }
   
     yamlfile = Buffer.from(yamlfile.data.content, 'base64').toString()
@@ -42,21 +46,31 @@ module.exports = (app) => {
       path:`.bit/responses/${configyml.before[0].body}`,
     });
 
-    await context.octokit.repos.createOrUpdateFileContents({
-      owner: context.payload.repository.owner.login,
-      repo: context.payload.repository.name,
-      path: ".camp",
-      message: "Update progress",
-      content: Buffer.from("0").toString('base64'),
-      committer: {
-        name: `bitcampdev`,
-        email: "info@bitproject.org",
-      },
-      author: {
-        name: `bitcampdev`,
-        email: "info@bitproject.org",
-      },
-    })
+    var data = {
+      stepTitle: configyml.steps[0].title,
+      time: context.payload.commits[0].timestamp
+    }
+    o[key].push(data);
+
+    try {
+      await context.octokit.repos.createOrUpdateFileContents({
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        path: ".bit/.progress",
+        message: "Track progress",
+        content: Buffer.from(JSON.stringify(o)).toString('base64'),
+        committer: {
+          name: `bitcampdev`,
+          email: "info@bitproject.org",
+        },
+        author: {
+          name: `bitcampdev`,
+          email: "info@bitproject.org",
+        },
+      })
+    } catch (e) {
+      return
+    }
 
     response = Buffer.from(response.data.content, 'base64').toString()
     return await context.octokit.issues.create({
@@ -98,13 +112,13 @@ module.exports = (app) => {
        console.log("ERROR: " + e);
      }
  
-     const progress = context.issue({
-       path: ".camp",
+     const campProgress = context.issue({
+       path: ".bit/.camp",
      });
  
-     var countfile = await context.octokit.repos.getContent(progress);
-     count = Buffer.from(countfile.data.content, 'base64').toString()
-     app.log.info(count)
+     var countfile = await context.octokit.repos.getContent(campProgress);
+     count = parseInt(Buffer.from(countfile.data.content, 'base64').toString())
+     app.log.info(configyml.steps[0])
  
      for (y = 0; y < configyml.steps[count].actions.length; y++) {
        var array = configyml.steps[count].actions[y]
@@ -124,10 +138,10 @@ module.exports = (app) => {
          app.log.info("Respond")
        }
        if (array.type == "createIssue") {
-         const responseFile = context.issue({
+         const responseBody = context.issue({
            path:`.bit/responses/${array.body}`,
          });
-         var response = await context.octokit.repos.getContent(responseFile);
+         var response = await context.octokit.repos.getContent(responseBody);
          response = Buffer.from(response.data.content, 'base64').toString()
          const issueBody = context.issue({
            issue_number: array.issue,
@@ -152,7 +166,7 @@ module.exports = (app) => {
      app.log.info(JSON.stringify(countfile))
      
      const update = context.issue({
-       path: ".camp",
+       path: ".bit/.camp",
        message: "Update progress",
        content: Buffer.from(count.toString()).toString('base64'),
        sha: countfile.data.sha,
@@ -165,8 +179,47 @@ module.exports = (app) => {
          email: "info@bitproject.org",
        },
      });
- 
-     return await context.octokit.repos.createOrUpdateFileContents(update)
-   }
+     context.octokit.repos.createOrUpdateFileContents(update)
+
+    const newProgress = context.issue({
+      path: ".bit/.progress",
+    });
+
+    var progressFile = await context.octokit.repos.getContent(newProgress);
+    o = JSON.parse(Buffer.from(progressFile.data.content, 'base64').toString())
+
+    try {
+      data = {
+        stepTitle: configyml.steps[count].title,
+        time: context.payload.pull_request.merged_at,
+      }
+    } catch (e) {
+      console.log("should work: " + context.payload.comment.created_at)
+      data = {
+        stepTitle: configyml.steps[count].title,
+        time: context.payload.comment.created_at,
+      }
+    }
+
+    console.log("Data: " + JSON.stringify(data))
+    o[key].push(data); 
+    console.log(JSON.stringify(o))
+    const progressUpdate = context.issue({
+      path: ".bit/.progress",
+      message: "Update progress",
+      content: Buffer.from(JSON.stringify(o)).toString('base64'),
+      sha: progressFile.data.sha,
+      committer: {
+        name: `bitcampdev`,
+        email: "info@bitproject.org",
+      },
+      author: {
+        name: `bitcampdev`,
+        email: "info@bitproject.org",
+      },
+      
+    });
+    return context.octokit.repos.createOrUpdateFileContents(progressUpdate)
+    }
  });
 };
