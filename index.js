@@ -29,7 +29,7 @@ module.exports = (app) => {
   if (start == ".bit") {
     app.log.info("Templated created...")
     app.log.info("Attempting to get YAML")
-    const configyml = await functions.yamlFile(context)
+    var configyml = await functions.yamlFile(context)
     
     // start lab by executing what is in the before portion of config.yml
     let response = await context.octokit.repos.getContent({
@@ -88,8 +88,8 @@ module.exports = (app) => {
 
    // Tests if the user created a comment, not the bot
    if (user != "bitcampdev[bot]") {
-     const configyml = await functions.yamlFile(context)
-     const countfile = await functions.getFileContent(context, ".bit/.camp")
+     var configyml = await functions.yamlFile(context)
+     var countfile = await functions.getFileContent(context, ".bit/.camp")
  
      for (y = 0; y < configyml.steps[count].actions.length; y++) {
        var array = configyml.steps[count].actions[y]
@@ -147,7 +147,7 @@ module.exports = (app) => {
      context.octokit.repos.createOrUpdateFileContents(update)
 
     // Retrieve .progress and append new step time/data 
-    const progressFile = await functions.getFileContent(context, ".bit/.progress")
+    var progressFile = await functions.getFileContent(context, ".bit/.progress")
     o = JSON.parse(Buffer.from(progressFile[0].data.content, 'base64').toString())
 
     try {
