@@ -13,6 +13,7 @@ const functions = require('./helpers');
 
 module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
+ o[key] = []
  app.on("push", async (context) => {
   // Executes for a push event on a repository with .bit
   app.log.info("Event: push")
