@@ -76,6 +76,8 @@ module.exports = (app) => {
 
 // Triggers when a pull_request is closed or comment is created
  app.on(['pull_request.closed', 'issue_comment.created'], async (context) => {
+   count = 0;
+   o = {};
    try {
      user = context.payload.sender.login
    } catch (e) {
