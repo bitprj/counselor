@@ -2,43 +2,34 @@
  * This is the main entrypoint to your Probot app
  * @param {import('probot').Probot} app
  */
-var configyml;
-var yamlfile;
-var progressFile;
+
 var count = 0;
+var start;
 var o = {}
 var key = "Progress"
 o[key] = []
 
-const yaml = require('js-yaml');
+const functions = require('./helpers');
 
 module.exports = (app) => {
- // Your code here
- var start = "";
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
-   app.log.info("Pushed")
-   app.log.info(context.payload.repository.owner.login, context.payload.repository.name)
-   try {
-    var yamlfile = await context.octokit.repos.getContent({
-      owner: context.payload.repository.owner.login,
-      repo: context.payload.repository.name,
-      path:".bit/config.yml",
-    });
-    app.log.info("Attempting to get YAML")
-   } catch (e) {
-     console.log(e)
-      return
-   }
-  
-    yamlfile = Buffer.from(yamlfile.data.content, 'base64').toString()
-    try {
-      let fileContents = yamlfile
-      configyml = yaml.load(fileContents);
-    } catch (e) {
-      console.log("ERROR: " + e);
-    }
+  // Executes for a push event on a repository with .bit
+  app.log.info("Event: push")
 
+  // Testing to see if this is the first time a template is created
+  try {
+    start = context.payload.commits[0].added[0].substring(0,4)
+  } catch (e) {
+    start = ""
+  }
+
+
+  if (start == ".bit") {
+    app.log.info("Templated created...")
+    app.log.info("Attempting to get YAML")
+    const configyml = await functions.yamlFile(context)
+    
     // start lab by executing what is in the before portion of config.yml
     let response = await context.octokit.repos.getContent({
       owner: context.payload.repository.owner.login,
@@ -46,45 +37,45 @@ module.exports = (app) => {
       path:`.bit/responses/${configyml.before[0].body}`,
     });
 
+    // Creating the .progress file that contains date and step
     var data = {
       stepTitle: configyml.steps[0].title,
       time: context.payload.commits[0].timestamp
     }
     o[key].push(data);
 
-    try {
-      await context.octokit.repos.createOrUpdateFileContents({
+      try {
+        await context.octokit.repos.createOrUpdateFileContents({
+          owner: context.payload.repository.owner.login,
+          repo: context.payload.repository.name,
+          path: ".bit/.progress",
+          message: "Track progress",
+          content: Buffer.from(JSON.stringify(o)).toString('base64'),
+          committer: {
+            name: `bitcampdev`,
+            email: "info@bitproject.org",
+          },
+          author: {
+            name: `bitcampdev`,
+            email: "info@bitproject.org",
+          },
+        })
+      } catch (e) {
+        return
+      }
+
+      response = Buffer.from(response.data.content, 'base64').toString()
+      return await context.octokit.issues.create({
         owner: context.payload.repository.owner.login,
         repo: context.payload.repository.name,
-        path: ".bit/.progress",
-        message: "Track progress",
-        content: Buffer.from(JSON.stringify(o)).toString('base64'),
-        committer: {
-          name: `bitcampdev`,
-          email: "info@bitproject.org",
-        },
-        author: {
-          name: `bitcampdev`,
-          email: "info@bitproject.org",
-        },
+        title: configyml.before[0].title,
+        body: response,
       })
-    } catch (e) {
-      return
-    }
-
-    response = Buffer.from(response.data.content, 'base64').toString()
-    return await context.octokit.issues.create({
-      owner: context.payload.repository.owner.login,
-      repo: context.payload.repository.name,
-      title: configyml.before[0].title,
-      body: response,
-    })
+   }
  });
 
-
+// Triggers when a pull_request is closed or comment is created
  app.on(['pull_request.closed', 'issue_comment.created'], async (context) => {
-   var yamlfile;
-
    try {
      user = context.payload.sender.login
    } catch (e) {
@@ -93,60 +84,31 @@ module.exports = (app) => {
 
    app.log.info(user)
 
+   // Tests if the user created a comment, not the bot
    if (user != "bitcampdev[bot]") {
-     try {
-       const yamlFile = context.issue({
-         path: '.bit/config.yml',
-       });
-       var yamlfile = await context.octokit.repos.getContent(yamlFile);
-     } catch (e) {
-       process.exit()
-     }
-
-     yamlfile = Buffer.from(yamlfile.data.content, 'base64').toString()
-
-     try {
-       let fileContents = yamlfile
-       configyml = await yaml.load(fileContents);
-     } catch (e) {
-       console.log("ERROR: " + e);
-     }
- 
-     const campProgress = context.issue({
-       path: ".bit/.camp",
-     });
- 
-     var countfile = await context.octokit.repos.getContent(campProgress);
-     count = parseInt(Buffer.from(countfile.data.content, 'base64').toString())
-     app.log.info(configyml.steps[0])
+     const configyml = await functions.yamlFile(context)
+     const countfile = await functions.getFileContent(context, ".bit/.camp")
  
      for (y = 0; y < configyml.steps[count].actions.length; y++) {
        var array = configyml.steps[count].actions[y]
        app.log.info(array)
- 
+      
+      // Executes an action based on the step in the YAML
        if (array.type == "respond") {
-         const responseFile = context.issue({
-           path:`.bit/responses/${array.with}`,
-         });
-         var response = await context.octokit.repos.getContent(responseFile);
-         response = Buffer.from(response.data.content, 'base64').toString()
+         const response = await functions.getFileContent(context, `.bit/responses/${array.with}`)
          const issueComment = context.issue({
-           body: response,
+           body: response[1],
            issue_number: array.issue,
          });
          context.octokit.issues.createComment(issueComment)
          app.log.info("Respond")
        }
        if (array.type == "createIssue") {
-         const responseBody = context.issue({
-           path:`.bit/responses/${array.body}`,
-         });
-         var response = await context.octokit.repos.getContent(responseBody);
-         response = Buffer.from(response.data.content, 'base64').toString()
+         const response = await functions.getFileContent(context, `.bit/responses/${array.body}`)
          const issueBody = context.issue({
            issue_number: array.issue,
            title: array.title,
-           body: response,
+           body: response[1],
          });
          app.log.info("createIssue")
          context.octokit.issues.create(issueBody)
@@ -159,17 +121,18 @@ module.exports = (app) => {
          context.octokit.issues.update(payload)
        }
      }
- 
+     
+     // Increment the count
      count = parseInt(count)
      count += 1
      app.log.info("Count: " + count)
-     app.log.info(JSON.stringify(countfile))
      
+     // Update the .camp file with new count
      const update = context.issue({
        path: ".bit/.camp",
        message: "Update progress",
        content: Buffer.from(count.toString()).toString('base64'),
-       sha: countfile.data.sha,
+       sha: countfile[0].data.sha,
        committer: {
          name: `bitcampdev`,
          email: "info@bitproject.org",
@@ -181,12 +144,9 @@ module.exports = (app) => {
      });
      context.octokit.repos.createOrUpdateFileContents(update)
 
-    const newProgress = context.issue({
-      path: ".bit/.progress",
-    });
-
-    var progressFile = await context.octokit.repos.getContent(newProgress);
-    o = JSON.parse(Buffer.from(progressFile.data.content, 'base64').toString())
+    // Retrieve .progress and append new step time/data 
+    const progressFile = await functions.getFileContent(context, ".bit/.progress")
+    o = JSON.parse(Buffer.from(progressFile[0].data.content, 'base64').toString())
 
     try {
       data = {
@@ -194,7 +154,6 @@ module.exports = (app) => {
         time: context.payload.pull_request.merged_at,
       }
     } catch (e) {
-      console.log("should work: " + context.payload.comment.created_at)
       data = {
         stepTitle: configyml.steps[count].title,
         time: context.payload.comment.created_at,
@@ -208,7 +167,7 @@ module.exports = (app) => {
       path: ".bit/.progress",
       message: "Update progress",
       content: Buffer.from(JSON.stringify(o)).toString('base64'),
-      sha: progressFile.data.sha,
+      sha: progressFile[0].data.sha,
       committer: {
         name: `bitcampdev`,
         email: "info@bitproject.org",
@@ -219,7 +178,7 @@ module.exports = (app) => {
       },
       
     });
-    return context.octokit.repos.createOrUpdateFileContents(progressUpdate)
+    return await context.octokit.repos.createOrUpdateFileContents(progressUpdate)
     }
  });
 };
