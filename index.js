@@ -92,7 +92,7 @@ module.exports = (app) => {
    if (user != "bitcampdev[bot]") {
      var configyml = await functions.yamlFile(context)
      var countfile = await functions.getFileContent(context, ".bit/.camp")
-     count = countfile[1]
+     count = parseInt(countfile[1])
  
      for (y = 0; y < configyml.steps[count].actions.length; y++) {
        var array = configyml.steps[count].actions[y]
@@ -128,7 +128,6 @@ module.exports = (app) => {
      }
      
      // Increment the count
-     count = parseInt(count)
      count += 1
      app.log.info("Count: " + count)
      
