@@ -119,11 +119,11 @@ module.exports = (app) => {
       })
       var pullFiles = await context.octokit.pulls.listFiles(fileCommits)
 
-      for (i = 0; i < pullFiles.data.length; i++) {
-        for (y = 0; y < configyml.steps[count].actions[0].files.length; y++) {
-          test2Array.push(configyml.steps[count].actions[0].files[y])
-          if (configyml.steps[count].actions[0].files[y] == pullFiles.data[i].filename) {
-            testArray.push(pullFiles.data[i].filename)
+      for (i = 0; i < configyml.steps[count].actions[0].files.length; i++) {
+        test2Array.push(configyml.steps[count].actions[0].files[i])
+        for (y = 0; y < pullFiles.data.length; y++) {
+          if (configyml.steps[count].actions[0].files[i] == pullFiles.data[y].filename) {
+            testArray.push(pullFiles.data[y].filename)
           }
         }
       }
