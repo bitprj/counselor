@@ -120,8 +120,8 @@ module.exports = (app) => {
       var pullFiles = await context.octokit.pulls.listFiles(fileCommits)
 
       for (i = 0; i < pullFiles.data.length; i++) {
-        test2Array.push(pullFiles.data[i].filename)
         for (y = 0; y < configyml.steps[count].actions[0].files.length; y++) {
+          test2Array.push(configyml.steps[count].actions[0].files[y])
           if (configyml.steps[count].actions[0].files[y] == pullFiles.data[i].filename) {
             testArray.push(pullFiles.data[i].filename)
           }
