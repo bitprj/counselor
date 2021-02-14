@@ -4,17 +4,21 @@
  */
 
 var count = 0;
+var prcount = 0;
+var issueno = 0;
 var start;
-var o = {}
+var tracker = {}
+var counter = {}
 var key = "Progress"
-o[key] = []
+var respond = false;
+tracker[key] = []
 
 const functions = require('./helpers');
 
 module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
-  o[key] = []
+  tracker[key] = []
   count = 0
   // Executes for a push event on a repository with .bit
   app.log.info("Event: push")
@@ -44,7 +48,7 @@ module.exports = (app) => {
       stepTitle: configyml.steps[0].title,
       time: context.payload.commits[0].timestamp
     }
-    o[key].push(data);
+    tracker[key].push(data);
 
       try {
         await context.octokit.repos.createOrUpdateFileContents({
@@ -52,7 +56,7 @@ module.exports = (app) => {
           repo: context.payload.repository.name,
           path: ".bit/.progress",
           message: "Track progress",
-          content: Buffer.from(JSON.stringify(o)).toString('base64'),
+          content: Buffer.from(JSON.stringify(tracker)).toString('base64'),
           committer: {
             name: `bitcampdev`,
             email: "info@bitproject.org",
@@ -63,6 +67,7 @@ module.exports = (app) => {
           },
         })
       } catch (e) {
+        console.log(e)
         return
       }
 
@@ -78,8 +83,13 @@ module.exports = (app) => {
 
 // Triggers when a pull_request is closed or comment is created
  app.on(['pull_request.closed', 'issue_comment.created'], async (context) => {
-   o = {};
+   tracker = {};
+   counter = {};
    count = 0;
+   prcount = 0;
+   var add = 0;
+   respond = false
+
    try {
      user = context.payload.sender.login
    } catch (e) {
@@ -92,50 +102,99 @@ module.exports = (app) => {
    if (user != "bitcampdev[bot]") {
      var configyml = await functions.yamlFile(context)
      var countfile = await functions.getFileContent(context, ".bit/.camp")
-     count = parseInt(countfile[1])
+     app.log.info(countfile[1])
+     counter = JSON.parse(countfile[1])
+     count = parseInt(counter.count)
+     prcount = parseInt(counter.prcount)
+     issueno = parseInt(counter.issue)
+
+    app.log.info(configyml.steps[count].event, context.payload.pull_request)
+
+    if (configyml.steps[count].event == "pull_request.closed" && context.payload.pull_request) {
+      var test2Array = []
+      var testArray = []
+      const fileCommits = context.issue({
+        pull_number: context.payload.pull_request.number,
+      })
+      var pullFiles = await context.octokit.pulls.listFiles(fileCommits)
+
+      for (i = 0; i < pullFiles.data.length; i++) {
+        test2Array.push(pullFiles.data[i].filename)
+        for (y = 0; y < configyml.steps[count].actions[0].files.length; y++) {
+          if (configyml.steps[count].actions[0].files[y] == pullFiles.data[i].filename) {
+            testArray.push(pullFiles.data[i].filename)
+          }
+        }
+      }
+
+      app.log.info(test2Array)
+      app.log.info(testArray)
+      if (test2Array.length == testArray.length) {
+
+        respond = true
+      }
+      // app.log.info(JSON.stringify(pullFiles.data[0].filename))
+    } else {
+      respond = true
+    }
  
      for (y = 0; y < configyml.steps[count].actions.length; y++) {
        var array = configyml.steps[count].actions[y]
        app.log.info(array)
       
       // Executes an action based on the step in the YAML
-       if (array.type == "respond") {
+      app.log.info("Respond: " + respond)
+       if (array.type == "respond" && respond == true) {
          const response = await functions.getFileContent(context, `.bit/responses/${array.with}`)
          const issueComment = context.issue({
            body: response[1],
-           issue_number: array.issue,
+           issue_number: issueno,
          });
          context.octokit.issues.createComment(issueComment)
          app.log.info("Respond")
+         add = 1
        }
-       if (array.type == "createIssue") {
+       if (array.type == "createIssue" && configyml.steps[count].event == "issue_comment.created") {
          const response = await functions.getFileContent(context, `.bit/responses/${array.body}`)
          const issueBody = context.issue({
-           issue_number: array.issue,
+           issue_number: issueno + prcount,
            title: array.title,
            body: response[1],
          });
          app.log.info("createIssue")
          context.octokit.issues.create(issueBody)
+         prcount += 1
        } 
-       if (array.type == "closeIssue") {
+       if (array.type == "closeIssue" && configyml.steps[count].event == "issue_comment.created") {
          const payload = context.issue({
            state: "closed",
-           issue_number: array.issue,
+           issue_number: issueno,
          })
+         issueno = issueno + prcount
+         prcount = 0
          context.octokit.issues.update(payload)
        }
      }
+    
+    if (context.payload.pull_request) {
+      prcount += 1
+    }
+ 
      
      // Increment the count
-     count += 1
+     count += add
      app.log.info("Count: " + count)
+     app.log.info("PRCount: " + prcount)
+     app.log.info("Issue: " + issueno)
+     counter.count = count
+     counter.prcount = prcount
+     counter.issue = issueno
      
      // Update the .camp file with new count
      const update = context.issue({
        path: ".bit/.camp",
        message: "Update progress",
-       content: Buffer.from(count.toString()).toString('base64'),
+       content: Buffer.from(JSON.stringify(counter)).toString('base64'),
        sha: countfile[0].data.sha,
        committer: {
          name: `bitcampdev`,
@@ -147,10 +206,11 @@ module.exports = (app) => {
        },
      });
      context.octokit.repos.createOrUpdateFileContents(update)
-
-    // Retrieve .progress and append new step time/data 
+    
+     if (respond == true) {
+          // Retrieve .progress and append new step time/data 
     var progressFile = await functions.getFileContent(context, ".bit/.progress")
-    o = JSON.parse(Buffer.from(progressFile[0].data.content, 'base64').toString())
+    tracker = JSON.parse(Buffer.from(progressFile[0].data.content, 'base64').toString())
 
     try {
       data = {
@@ -165,12 +225,12 @@ module.exports = (app) => {
     }
 
     console.log("Data: " + JSON.stringify(data))
-    o[key].push(data); 
-    console.log(JSON.stringify(o))
+    tracker[key].push(data); 
+    console.log(JSON.stringify(tracker))
     const progressUpdate = context.issue({
       path: ".bit/.progress",
       message: "Update progress",
-      content: Buffer.from(JSON.stringify(o)).toString('base64'),
+      content: Buffer.from(JSON.stringify(tracker)).toString('base64'),
       sha: progressFile[0].data.sha,
       committer: {
         name: `bitcampdev`,
@@ -184,5 +244,7 @@ module.exports = (app) => {
     });
     return await context.octokit.repos.createOrUpdateFileContents(progressUpdate)
     }
+  }
+
  });
 };
