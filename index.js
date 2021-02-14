@@ -108,6 +108,7 @@ module.exports = (app) => {
      prcount = parseInt(counter.prcount)
      issueno = parseInt(counter.issue)
 
+    app.log.info("Count before: " + count)
     app.log.info(configyml.steps[count].event, context.payload.pull_request)
 
     if (configyml.steps[count].event == "pull_request.closed" && context.payload.pull_request) {
@@ -182,6 +183,7 @@ module.exports = (app) => {
  
      
      // Increment the count
+     app.log.info("Add: " + add)
      count += add
      app.log.info("Count: " + count)
      app.log.info("PRCount: " + prcount)
