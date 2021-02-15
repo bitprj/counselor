@@ -226,7 +226,10 @@ module.exports = (app) => {
       }
     }
 
-    console.log("Data: " + JSON.stringify(data))
+    const getLink = context.issue()
+    var links = await context.octokit.get(getLink)
+
+    console.log(user + ", " + JSON.stringify(data) + ", " + links.html_url + ", " + links.template_repository.html_url)
     tracker[key].push(data); 
     console.log(JSON.stringify(tracker))
     const progressUpdate = context.issue({
