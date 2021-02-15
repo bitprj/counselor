@@ -227,7 +227,7 @@ module.exports = (app) => {
     }
 
     const getLink = context.issue()
-    var links = await context.octokit.get(getLink)
+    var links = await context.octokit.repos.get(getLink)
 
     console.log(user + ", " + JSON.stringify(data) + ", " + links.html_url + ", " + links.template_repository.html_url)
     tracker[key].push(data); 
