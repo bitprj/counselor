@@ -231,7 +231,8 @@ module.exports = (app) => {
     var links = await context.octokit.repos.get(getLink)
     app.log.info("Links: " + JSON.stringify(links))
 
-    console.log(user + ", " + JSON.stringify(data) + ", " + links.html_url + ", " + links.template_repository.html_url)
+    console.log(user + ", " + JSON.stringify(data) + ", " + links.data.html_url)
+    // + ", " + links.data.template_repository.html_url
     tracker[key].push(data); 
     console.log(JSON.stringify(tracker))
     const progressUpdate = context.issue({
