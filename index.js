@@ -226,10 +226,8 @@ module.exports = (app) => {
       }
     }
 
-    const getLink = context.issue({
-      user: user,
-      repo: context.payload.repository.name,
-    })
+    const getLink = context.issue({})
+    app.log.info(getLink)
     var links = await context.octokit.repos.get(getLink)
 
     console.log(user + ", " + JSON.stringify(data) + ", " + links.html_url + ", " + links.template_repository.html_url)
