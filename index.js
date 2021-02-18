@@ -110,8 +110,9 @@ module.exports = (app) => {
 
     app.log.info("Count before: " + count)
     app.log.info(configyml.steps[count].event, context.payload.pull_request)
-
+    app.log.info("Count: " + count)
     if (configyml.steps[count].event == "pull_request.closed" && context.payload.pull_request) {
+      app.log.info("Count: " + count)
       var test2Array = []
       var testArray = []
       const fileCommits = context.issue({
