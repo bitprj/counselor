@@ -19,7 +19,6 @@ module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
   tracker[key] = []
-  count = 0
   // Executes for a push event on a repository with .bit
   app.log.info("Event: push")
 
