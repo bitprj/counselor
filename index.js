@@ -3,6 +3,8 @@
  * @param {import('probot').Probot} app
  */
 
+const newrelic = require('newrelic');
+
 var count = 0;
 var prcount = 0;
 var issueno = 0;
@@ -14,6 +16,7 @@ var respond = false;
 tracker[key] = []
 
 const functions = require('./helpers');
+
 
 module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
@@ -31,6 +34,8 @@ module.exports = (app) => {
 
 
   if (start == ".bit") {
+    const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.name }
+    newrelic.recordCustomEvent("CabinGithub", attributes)
     app.log.info("Templated created...")
     app.log.info("Attempting to get YAML")
     var configyml = await functions.yamlFile(context)
@@ -99,6 +104,8 @@ module.exports = (app) => {
 
    // Tests if the user created a comment, not the bot
    if (user != "bitcampdev[bot]") {
+     const attributes = { type: 'Complete Step', user: user}
+     newrelic.recordCustomEvent("CabinGithub", attributes)
      var configyml = await functions.yamlFile(context)
      var countfile = await functions.getFileContent(context, ".bit/.camp")
      app.log.info(countfile[1])
