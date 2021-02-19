@@ -34,8 +34,10 @@ module.exports = (app) => {
 
 
   if (start == ".bit") {
-    const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.name }
+    // Record data in newrelic
+    const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.html_url }
     newrelic.recordCustomEvent("CabinGithub", attributes)
+
     app.log.info("Templated created...")
     app.log.info("Attempting to get YAML")
     var configyml = await functions.yamlFile(context)
@@ -104,8 +106,18 @@ module.exports = (app) => {
 
    // Tests if the user created a comment, not the bot
    if (user != "bitcampdev[bot]") {
-     const attributes = { type: 'Complete Step', user: user}
+
+     // Record step progression in new relic
+     try {
+       var issueLink = context.payload.issue.html_url
+       var repoLink = context.payload.repository.html_url
+     } catch (e) {
+       var issueLink = context.payload.pull_request.html_url
+       var repoLink = context.payload.repo.html_url
+     }
+     const attributes = { type: 'Completed Step', user: user, repo: repoLink, title: configyml.steps[count].title, path: `.bit/responses/${configyml.steps[count].actions[0].with}`, link: issueLink}
      newrelic.recordCustomEvent("CabinGithub", attributes)
+
      var configyml = await functions.yamlFile(context)
      var countfile = await functions.getFileContent(context, ".bit/.camp")
      app.log.info(countfile[1])
@@ -117,6 +129,7 @@ module.exports = (app) => {
     app.log.info("Count before: " + count)
     app.log.info(configyml.steps[count].event, context.payload.pull_request)
     app.log.info("Count: " + count)
+
     if (configyml.steps[count].event == "pull_request.closed" && context.payload.pull_request) {
       app.log.info("Count: " + count)
       var test2Array = []
