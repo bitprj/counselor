@@ -35,7 +35,7 @@ module.exports = (app) => {
 
   if (start == ".bit") {
     // Record data in newrelic
-    const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.html_url }
+    const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url }
     newrelic.recordCustomEvent("CabinGithub", attributes)
 
     app.log.info("Templated created...")
@@ -108,12 +108,11 @@ module.exports = (app) => {
    if (user != "bitcampdev[bot]") {
 
      // Record step progression in new relic
+     var repoLink = context.payload.repository.html_url
      try {
        var issueLink = context.payload.issue.html_url
-       var repoLink = context.payload.repository.html_url
      } catch (e) {
        var issueLink = context.payload.pull_request.html_url
-       var repoLink = context.payload.repo.html_url
      }
      const attributes = { type: 'Completed Step', user: user, repo: repoLink, title: configyml.steps[count].title, path: `.bit/responses/${configyml.steps[count].actions[0].with}`, link: issueLink}
      newrelic.recordCustomEvent("CabinGithub", attributes)
