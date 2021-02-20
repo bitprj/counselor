@@ -107,6 +107,14 @@ module.exports = (app) => {
    // Tests if the user created a comment, not the bot
    if (user != "bitcampdev[bot]") {
 
+    var configyml = await functions.yamlFile(context)
+    var countfile = await functions.getFileContent(context, ".bit/.camp")
+    app.log.info(countfile[1])
+    counter = JSON.parse(countfile[1])
+    count = parseInt(counter.count)
+    prcount = parseInt(counter.prcount)
+    issueno = parseInt(counter.issue)
+    
      // Record step progression in new relic
      var repoLink = context.payload.repository.html_url
      try {
@@ -116,14 +124,6 @@ module.exports = (app) => {
      }
      const attributes = { type: 'Completed Step', user: user, repo: repoLink, title: configyml.steps[count].title, path: `.bit/responses/${configyml.steps[count].actions[0].with}`, link: issueLink}
      newrelic.recordCustomEvent("CabinGithub", attributes)
-
-     var configyml = await functions.yamlFile(context)
-     var countfile = await functions.getFileContent(context, ".bit/.camp")
-     app.log.info(countfile[1])
-     counter = JSON.parse(countfile[1])
-     count = parseInt(counter.count)
-     prcount = parseInt(counter.prcount)
-     issueno = parseInt(counter.issue)
 
     app.log.info("Count before: " + count)
     app.log.info(configyml.steps[count].event, context.payload.pull_request)
