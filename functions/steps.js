@@ -214,7 +214,9 @@ const startLab = async (context, configyml) => {
         console.log(e)
       }
     
-    var path = `.bit/responses/${configyml.before[0].body}`
+    console.log("Tracked the progress...")
+    try{
+      var path = `.bit/responses/${configyml.before[0].body}`
     var gqlrequest = `
     mutation insertProgress {
         insert_users_progress(
@@ -233,7 +235,12 @@ const startLab = async (context, configyml) => {
         }
     }
     `
-    console.log(await gql.queryData(gqlrequest))
+    let res = await gql.queryData(gqlrequest)
+    console.log(res)
+    } catch (e) {
+      console.log(e)
+    }
+    
 
     console.log("Templated created...")
     console.log("Attempting to get YAML")
