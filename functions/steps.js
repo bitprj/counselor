@@ -211,7 +211,7 @@ const startLab = async (context, configyml) => {
           },
         })
       } catch (e) {
-        return
+        console.log(e)
       }
     
     var path = `.bit/responses/${configyml.before[0].body}`
