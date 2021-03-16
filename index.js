@@ -22,9 +22,9 @@ module.exports = (app) => {
     let configData = await data.yamlFile(context);
     console.log("Deleting file...")
     await steps.deleteFile(context);
-    steps.startLab(context, configData);
+    await steps.startLab(context, configData);
     console.log("Committing workflow files")
-    steps.workFlow(context);
+    await steps.workFlow(context);
   }
  });
 
@@ -55,11 +55,16 @@ module.exports = (app) => {
 };
 
 async function main(context, event) {
+  let currentStep = ""
   let configData = await data.yamlFile(context);
   console.log("Got configyml!")
 
-  let currentStep = await data.findStep(context);
-  console.log("Getting current step!")
+  try {
+    currentStep = await data.findStep(context);
+    console.log("Getting current step!")
+  } catch (e) {
+    return
+  }
 
   if (event == 'create') {
     await steps.newBranch(context, context.payload.ref, currentStep)
