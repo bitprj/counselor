@@ -3,6 +3,7 @@
  * @param {import('probot').Probot} app
  */
 
+const newrelic = require('newrelic');
 const data = require('./functions/data.js');
 const steps = require('./functions/steps.js');
 
