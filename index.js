@@ -58,6 +58,11 @@ module.exports = (app) => {
 async function main(context, event) {
   let currentStep = ""
   let configData = await data.yamlFile(context);
+
+  if (configData == null) {
+    return
+  }
+
   console.log("Got configyml!")
 
   try {
@@ -72,6 +77,11 @@ async function main(context, event) {
   } else {
     console.log(currentStep, configData, event)
     let typeOfStep = await data.typeStep(currentStep, configData, event);
+
+    if (typeOfStep == null) {
+      return
+    }
+
     console.log("The type: " + typeOfStep)
   
     let moveOn = await steps.workEvaluation(typeOfStep, context, configData);

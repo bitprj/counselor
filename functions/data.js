@@ -25,7 +25,7 @@ const typeStep = async (currentStep, configyml, eventTrigger) => {
     }
 
     if (event != eventTrigger) {
-        process.exit()
+        return null
     }
     return [stepType, files, scripts]
 }
@@ -63,8 +63,7 @@ const yamlFile = async (context) => {
           path:".bit/config.yml",
     });
     } catch (e) {
-        process.exit()
-        return
+        return null
     }
 
     yamlfile = Buffer.from(yamlfile.data.content, 'base64').toString()
