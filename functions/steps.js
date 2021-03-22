@@ -126,7 +126,7 @@ const nextStep = async (count, context, configyml, issueno) => {
       let responseFile = array.with
       const response = await data.getFileContent(context, `.bit/responses/${responseFile}`)
       const issueComment = context.issue({
-        body: response[1],
+        body: data.parseTable(response[1]),
         issue_number: issueno,
       });
       context.octokit.issues.createComment(issueComment)
@@ -145,7 +145,7 @@ const nextStep = async (count, context, configyml, issueno) => {
       const response = await data.getFileContent(context, `.bit/responses/${responseFile}`)
       const issueBody = context.issue({
         title: array.title,
-        body: response[1],
+        body: data.parseTable(response[1]),
       });
 
       context.octokit.issues.create(issueBody)
@@ -268,7 +268,7 @@ const startLab = async (context, configyml) => {
       owner: context.payload.repository.owner.login,
       repo: context.payload.repository.name,
       title: configyml.before[0].title,
-      body: response,
+      body: data.parseTable(response),
     })
 }
 

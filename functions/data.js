@@ -1,6 +1,16 @@
 const gql = require('./graphql.js');
 const yaml = require('js-yaml');
 
+const parseTable = async (markdown) => {
+  let labContent = ""
+  try {
+    labContent = markdown.split('---')
+    return labContent[2]
+  } catch (e) {
+    return markdown
+  }
+}
+
 const issueNo = async (context) => {
   const payload = context.issue({
     state: "open",
@@ -92,3 +102,4 @@ exports.getFileContent = getFileContent
 exports.findStep = findStep
 exports.typeStep = typeStep
 exports.issueNo = issueNo
+exports.parseTable = parseTable
