@@ -106,6 +106,10 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
  }
  `
  console.log(await gql.queryData(gqlrequest))
+
+ // log in newrelic
+ const attributes = { type: 'Start New Step', user: moveOn[3], repo: moveOn[2], repoName: moveOn[4], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
+ newrelic.recordCustomEvent("CabinGithub", attributes)
 }
 
 const nextStep = async (count, context, configyml, issueno) => {
@@ -179,20 +183,23 @@ const workEvaluation = async (typeOfStep, context, configyml) => {
 }
 
 const startLab = async (context, configyml) => {
-    // var gqlrequest = `
-    // mutation startCourse {
-    // insert_course_analytics(
-    //     objects: {
-    //     repo: "${context.payload.repository.html_url}", 
-    //     user: "${context.payload.repository.owner.login}"
-    // }) {
-    //     returning {
-    //     id
-    //     }
-    // }
-    // }
-    // `
-    // console.log(await gql.queryData(gqlrequest))
+    var gqlrequest = `
+    mutation startCourse {
+    insert_course_analytics(
+        objects: {
+        repo: "${context.payload.repository.html_url}", 
+        user: "${context.payload.repository.owner.login}"
+    }) {
+        returning {
+        id
+        }
+    }
+    }
+    `
+    console.log(await gql.queryData(gqlrequest))
+
+    const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url }
+    newrelic.recordCustomEvent("CabinGithub", attributes)
 
     try {
         await context.octokit.repos.createOrUpdateFileContents({
@@ -217,26 +224,30 @@ const startLab = async (context, configyml) => {
     console.log("Tracked the progress...")
     try{
       var path = `.bit/responses/${configyml.before[0].body}`
-    var gqlrequest = `
-    mutation insertProgress {
-        insert_users_progress(
-        objects: {
-            path: "${path}", 
-            repo: "${context.payload.repository.html_url}", 
-            title: "${configyml.steps[0].title}", 
-            user: "${context.payload.repository.owner.login}",
-            count: 0,
-            repoName: "${context.payload.repository.name}"
-        }
-        ) {
-        returning {
-            id
-        }
-        }
-    }
-    `
-    let res = await gql.queryData(gqlrequest)
-    console.log(res)
+      var gqlrequest = `
+      mutation insertProgress {
+          insert_users_progress(
+          objects: {
+              path: "${path}", 
+              repo: "${context.payload.repository.html_url}", 
+              title: "${configyml.steps[0].title}", 
+              user: "${context.payload.repository.owner.login}",
+              count: 0,
+              repoName: "${context.payload.repository.name}"
+          }
+          ) {
+          returning {
+              id
+          }
+          }
+      }
+      `
+      let res = await gql.queryData(gqlrequest)
+      console.log(res)
+
+      //log first step in newrelic
+      const attributes = { type: 'Start New Step', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url, repoName: context.payload.repository.name, title: configyml.steps[0].title, path: path, count: 0 }
+      newrelic.recordCustomEvent("CabinGithub", attributes)
     } catch (e) {
       console.log(e)
     }
