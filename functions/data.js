@@ -4,7 +4,8 @@ const yaml = require('js-yaml');
 const parseTable = async (markdown) => {
   let labContent = ""
   try {
-    labContent = markdown.split('---')
+    labContent = markdown.split('---\n')
+    console.log(labContent)
     return labContent[2]
   } catch (e) {
     return markdown
