@@ -6,6 +6,7 @@ const parseTable = async (markdown) => {
   try {
     labContent = markdown.split('---\n')
     console.log(labContent)
+    console.log(labContent[2])
     return labContent[2]
   } catch (e) {
     return markdown
