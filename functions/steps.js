@@ -1,6 +1,7 @@
 const data = require('./data.js');
 const gql = require('./graphql.js');
-const eval = require('./eval.js')
+const eval = require('./eval.js');
+const newrelic = require('newrelic');
 
 const newBranch = async (context, branch, count) => {
   const responseBody = context.issue({
