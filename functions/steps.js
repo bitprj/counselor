@@ -19,11 +19,11 @@ const newBranch = async (context, branch, count) => {
     sha: countfile.data.sha,
     branch: branch,
     committer: {
-      name: `bitcampdev`,
+      name: `counselorbot`,
       email: "info@bitproject.org",
     },
     author: {
-      name: `bitcampdev`,
+      name: `counselorbot`,
       email: "info@bitproject.org",
     },
   });
@@ -71,11 +71,11 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
       sha: countfile.data.sha,
       branch: `week${weekno}`,
       committer: {
-        name: `bitcampdev`,
+        name: `counselorbot`,
         email: "info@bitproject.org",
       },
       author: {
-        name: `bitcampdev`,
+        name: `counselorbot`,
         email: "info@bitproject.org",
       },
     });
@@ -210,11 +210,11 @@ const startLab = async (context, configyml) => {
           message: "Track progress",
           content: Buffer.from(JSON.stringify(0)).toString('base64'),
           committer: {
-            name: `bitcampdev`,
+            name: `counselorbot`,
             email: "info@bitproject.org",
           },
           author: {
-            name: `bitcampdev`,
+            name: `counselorbot`,
             email: "info@bitproject.org",
           },
         })
@@ -294,11 +294,11 @@ const workFlow = async (context) => {
         message: "Start workflows",
         content: body,
         committer: {
-          name: `bitcampdev`,
+          name: `counselorbot`,
           email: "info@bitproject.org",
         },
         author: {
-          name: `bitcampdev`,
+          name: `counselorbot`,
           email: "info@bitproject.org",
         },
       })
