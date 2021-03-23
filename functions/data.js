@@ -1,16 +1,18 @@
 const gql = require('./graphql.js');
 const yaml = require('js-yaml');
 
-const parseTable = async (markdown) => {
+const parseTable = (markdown) => {
   let labContent = ""
   try {
     labContent = markdown.split('---\n')
     console.log(labContent)
     console.log(labContent[2])
-    return labContent[2]
+    labContent = labContent[2]
   } catch (e) {
-    return markdown
+    labContent = markdown
   }
+
+  return labContent
 }
 
 const issueNo = async (context) => {
