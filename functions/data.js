@@ -5,9 +5,12 @@ const parseTable = (markdown) => {
   let labContent = ""
   try {
     labContent = markdown.split('---\n')
-    console.log(labContent)
-    console.log(labContent[2])
-    labContent = labContent[2]
+    if (labContent[2] == null) {
+      labContent = markdown
+    } else {
+      labContent.splice(0,2);
+      labContent.join()
+    }
   } catch (e) {
     labContent = markdown
   }
