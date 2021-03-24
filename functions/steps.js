@@ -66,9 +66,10 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
       ref: `week${weekno}`
     });
     countfile = await context.octokit.repos.getContent(responseBody);
-    mainfile = await data.getFileContent(context, ".bit/.progress")
+    let mainfile = await data.getFileContent(context, ".bit/.progress")
     console.log(countfile)
     console.log(weekno)
+    console.log(mainfile)
     
     const mainupdate = context.issue({
       path: ".bit/.progress",
