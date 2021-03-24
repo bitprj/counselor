@@ -61,22 +61,13 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
   console.log(count)
 
   try {
-    const responseBody = context.issue({
-      path: ".bit/.progress",
-      ref: `week${weekno}`
-    });
-    countfile = await context.octokit.repos.getContent(responseBody);
     let mainfile = await data.getFileContent(context, ".bit/.progress")
-    console.log(countfile)
-    console.log(weekno)
-    console.log(mainfile)
-    
     const mainupdate = context.issue({
       path: ".bit/.progress",
       message: "Update progress",
       content: Buffer.from(count.toString()).toString('base64'),
       // countfile must request the specific week branch
-      sha: mainfile[1].data.sha,
+      sha: mainfile[0].data.sha,
       committer: {
         name: `counselorbot`,
         email: "info@bitproject.org",
@@ -87,6 +78,13 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
       },
     });
     await context.octokit.repos.createOrUpdateFileContents(mainupdate)
+    console.log("Successfully updated main branch.")
+
+    const responseBody = context.issue({
+      path: ".bit/.progress",
+      ref: `week${weekno}`
+    });
+    countfile = await context.octokit.repos.getContent(responseBody);
     
     const update = context.issue({
       path: ".bit/.progress",
@@ -109,6 +107,7 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
     console.log("Successfully updated!")  
   } catch (e) {
     console.log("End of week")
+    console.log(e)
   }
 
   var path = `.bit/responses/${configyml.steps[count-1].actions[0].with}`
