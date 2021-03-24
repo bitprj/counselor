@@ -66,9 +66,27 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
       ref: `week${weekno}`
     });
     countfile = await context.octokit.repos.getContent(responseBody);
+    mainfile = await data.getFileContent(context, ".bit/.progress")
     console.log(countfile)
     console.log(weekno)
-  
+    
+    const mainupdate = context.issue({
+      path: ".bit/.progress",
+      message: "Update progress",
+      content: Buffer.from(count.toString()).toString('base64'),
+      // countfile must request the specific week branch
+      sha: mainfile[1].data.sha,
+      committer: {
+        name: `counselorbot`,
+        email: "info@bitproject.org",
+      },
+      author: {
+        name: `counselorbot`,
+        email: "info@bitproject.org",
+      },
+    });
+    await context.octokit.repos.createOrUpdateFileContents(mainupdate)
+    
     const update = context.issue({
       path: ".bit/.progress",
       message: "Update progress",
