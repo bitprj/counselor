@@ -8,8 +8,14 @@ const newBranch = async (context, branch, count) => {
     path: ".bit/.progress",
     ref: branch
   });
-  countfile = await context.octokit.repos.getContent(responseBody);
-  console.log(countfile)
+
+  try {
+    countfile = await context.octokit.repos.getContent(responseBody);
+    console.log(countfile)
+  } catch (e) {
+    return null
+  }
+
 
   const update = context.issue({
     path: ".bit/.progress",

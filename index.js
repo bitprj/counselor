@@ -73,7 +73,10 @@ async function main(context, event) {
   }
 
   if (event == 'create') {
-    await steps.newBranch(context, context.payload.ref, currentStep)
+    let condition = await steps.newBranch(context, context.payload.ref, currentStep)
+    if (condition == null) {
+      return
+    }
   } else {
     console.log(currentStep, configData, event)
     let typeOfStep = await data.typeStep(currentStep, configData, event);
