@@ -9,7 +9,7 @@ const parseTable = (markdown) => {
       labContent = markdown
     } else {
       labContent.splice(0,2);
-      labContent.join('---\n')
+      labContent = labContent.join('---\n')
       labContent = labContent.toString()
     }
   } catch (e) {
