@@ -44,7 +44,7 @@ module.exports = (app) => {
  app.on('workflow_run.completed', async (context) => {
    console.log("Workflow run")
    console.log(context.payload.workflow_run.name)
-   if (context.payload.workflow_run.name != "Syncing Your Cabin" && context.payload.workflow_run.head_commit.message != "Track progress" && context.payload.workflow_run.head_commit.message != "Update progress") {
+   if (context.payload.workflow_run.name != "Syncing Your Cabin" && context.payload.workflow_run.head_commit.message != "Start workflows" && context.payload.workflow_run.head_commit.message != "Track progress" && context.payload.workflow_run.head_commit.message != "Update progress") {
       main(context, 'workflow_run.completed');
    }
  });
