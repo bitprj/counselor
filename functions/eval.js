@@ -13,7 +13,7 @@ const checks = async (context) => {
 
 const IssueComment = async (context) => {
     let repolink = context.payload.repository.html_url
-    let reslink = context.payload.issue.html_url;
+    let reslink = context.payload.comment.html_url;
     let success = true;
     return [success, reslink, repolink, context.issue().owner, context.issue().repo]
 }
