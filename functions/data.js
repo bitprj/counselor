@@ -90,7 +90,14 @@ const yamlFile = async (context) => {
       let fileContents = yamlfile
       configyml = yaml.load(fileContents);
     } catch (e) {
+      const issueBody = context.issue({
+        title: "[ERROR] Please read",
+        body: `There was an issue parsing the config file of this course. Please contact your counselor and send them the below error.\n${e}`,
+      });
+
+      context.octokit.issues.create(issueBody)
       console.log("ERROR: " + e);
+      return null
     }
 
     return configyml;
