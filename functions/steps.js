@@ -54,7 +54,7 @@ const deleteFile = async (context) => {
 
 }
 
-const updateFiles = async (moveOn, count, configyml, weekno, context) => {
+const updateFiles = async (typeOfStep, moveOn, count, configyml, weekno, context) => {
   console.log("Incrementing count")
   console.log(count)
   count += 1
@@ -111,29 +111,57 @@ const updateFiles = async (moveOn, count, configyml, weekno, context) => {
   }
 
   var path = `.bit/responses/${configyml.steps[count-1].actions[0].with}`
-  var gqlrequest = `
-  mutation insertProgress {
-   insert_users_progress(
-     objects: {
-       link: "${moveOn[1]}", 
-       path: "${path}", 
-       repo: "${moveOn[2]}", 
-       title: "${configyml.steps[count].title}", 
-       user: "${moveOn[3]}",
-       count: ${count},
-       repoName: "${moveOn[4]}",
-     }
-   ) {
-     returning {
-       id
+  var gqlrequest = ""
+  var attributes = ""
+
+  if (typeOfStep[0] == "feedback") {
+    var gqlrequest = `
+    mutation insertProgress {
+     insert_users_progress(
+       objects: {
+         link: "${moveOn[1]}", 
+         feedback: "${moveOn[3]}
+         path: "${path}", 
+         repo: "${moveOn[2]}", 
+         title: "${configyml.steps[count].title}", 
+         user: "${moveOn[4]}",
+         count: ${count},
+         repoName: "${moveOn[5]}",
+       }
+     ) {
+       returning {
+         id
+       }
      }
    }
- }
- `
+   `
+    var attributes = { type: 'Feedback', feedback: moveOn[3], user: moveOn[4], repo: moveOn[2], repoName: moveOn[5], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
+  } else {
+    var gqlrequest = `
+    mutation insertProgress {
+     insert_users_progress(
+       objects: {
+         link: "${moveOn[1]}", 
+         path: "${path}", 
+         repo: "${moveOn[2]}", 
+         title: "${configyml.steps[count].title}", 
+         user: "${moveOn[3]}",
+         count: ${count},
+         repoName: "${moveOn[4]}",
+       }
+     ) {
+       returning {
+         id
+       }
+     }
+   }
+   `
+   var attributes = { type: 'Start New Step', user: moveOn[3], repo: moveOn[2], repoName: moveOn[4], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
+  }
+ 
  console.log(await gql.queryData(gqlrequest))
 
  // log in newrelic
- const attributes = { type: 'Start New Step', user: moveOn[3], repo: moveOn[2], repoName: moveOn[4], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
  newrelic.recordCustomEvent("CabinGithub", attributes)
 }
 
@@ -203,6 +231,9 @@ const workEvaluation = async (typeOfStep, context, configyml) => {
   } else if (typeOfStep[0] == "PRmerge") {
     console.log("Checking PR")
     res = await eval.PRmerge(context, configyml)
+  } else if (typeOfStep[0] == "feedback") {
+    console.log("Receiving feedback")
+    res = await eval.feedback(context)
   }
   return res
 }
