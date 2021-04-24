@@ -11,6 +11,14 @@ const checks = async (context) => {
     return [success, reslink, repolink, context.issue().owner, context.issue().repo]
 }
 
+const feedback = async (context) => {
+  let repolink = context.payload.repository.html_url
+  let reslink = context.payload.comment.html_url;
+  let feedback = context.payload.comment.body;
+  let success = true;
+  return [success, reslink, repolink, feedback, context.issue().owner, context.issue().repo]
+}
+
 const IssueComment = async (context) => {
     let repolink = context.payload.repository.html_url
     let reslink = context.payload.comment.html_url;
@@ -55,3 +63,4 @@ const PRmerge = async (context, configyml) => {
 exports.checks = checks
 exports.IssueComment = IssueComment
 exports.PRmerge = PRmerge
+exports.feedback = feedback
