@@ -120,7 +120,7 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, weekno, context
      insert_users_progress(
        objects: {
          link: "${moveOn[1]}", 
-         feedback: "${moveOn[3]}
+         feedback: "${moveOn[3]}",
          path: "${path}", 
          repo: "${moveOn[2]}", 
          title: "${configyml.steps[count].title}", 
