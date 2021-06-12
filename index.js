@@ -93,6 +93,10 @@ async function main(context, event) {
     console.log("Successfully evaluated")
     console.log("Next Step function executing")
     let issueNo = await data.issueNo(context)
+
+    if (issueNo == null) {
+      return
+    }
   
     if (moveOn[0] == true) {
       let weekno = await steps.nextStep(currentStep, context, configData, issueNo);
