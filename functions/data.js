@@ -25,8 +25,11 @@ const issueNo = async (context) => {
   })
 
   let res = await context.octokit.issues.listForRepo(payload)
-  
-  return res.data[0].number
+  try {
+    return res.data[0].number
+  } catch (e) {
+    return null
+  }
 }
 
 const typeStep = async (currentStep, configyml, eventTrigger) => {
