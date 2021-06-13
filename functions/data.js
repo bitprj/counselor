@@ -21,10 +21,6 @@ const parseTable = (markdown) => {
       labContent = labContent.toString()
     }
   } catch (e) {
-<<<<<<< Updated upstream
-=======
-    console.log("CAUGHT ERROR! " + e)
->>>>>>> Stashed changes
     labContent = markdown
   }
 
