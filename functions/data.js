@@ -13,6 +13,7 @@ const parseTable = (markdown) => {
       labContent = labContent.toString()
     }
   } catch (e) {
+    console.log("Caught error: " + e)
     labContent = markdown
   }
 
