@@ -54,7 +54,7 @@ const deleteFile = async (context) => {
 
 }
 
-const updateFiles = async (typeOfStep, moveOn, count, configyml, weekno, context) => {
+const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, context) => {
   console.log("Incrementing count")
   console.log(count)
   count += 1
@@ -80,31 +80,33 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, weekno, context
     await context.octokit.repos.createOrUpdateFileContents(mainupdate)
     console.log("Successfully updated main branch.")
 
-    const responseBody = context.issue({
-      path: ".bit/.progress",
-      ref: `week${weekno}`
-    });
-    countfile = await context.octokit.repos.getContent(responseBody);
-    
-    const update = context.issue({
-      path: ".bit/.progress",
-      message: "Update progress",
-      content: Buffer.from(count.toString()).toString('base64'),
-      // countfile must request the specific week branch
-      sha: countfile.data.sha,
-      branch: `week${weekno}`,
-      committer: {
-        name: `counselorbot`,
-        email: "info@bitproject.org",
-      },
-      author: {
-        name: `counselorbot`,
-        email: "info@bitproject.org",
-      },
-    });
-    console.log("Attempting to update...")
-    await context.octokit.repos.createOrUpdateFileContents(update)
-    console.log("Successfully updated!")  
+    if (branchName != null) {
+      const responseBody = context.issue({
+        path: ".bit/.progress",
+        ref: branchName
+      });
+      countfile = await context.octokit.repos.getContent(responseBody);
+      
+      const update = context.issue({
+        path: ".bit/.progress",
+        message: "Update progress",
+        content: Buffer.from(count.toString()).toString('base64'),
+        // countfile must request the specific week branch
+        sha: countfile.data.sha,
+        branch: branchName,
+        committer: {
+          name: `counselorbot`,
+          email: "info@bitproject.org",
+        },
+        author: {
+          name: `counselorbot`,
+          email: "info@bitproject.org",
+        },
+      });
+      console.log("Attempting to update...")
+      await context.octokit.repos.createOrUpdateFileContents(update)
+      console.log("Successfully updated!") 
+    } 
   } catch (e) {
     console.log("End of week")
     console.log(e)
@@ -166,13 +168,21 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, weekno, context
 }
 
 const nextStep = async (count, context, configyml, issueno) => {
-  var weekno = ""
+
+  var branchName = ""
+  try {
+    branchName = configyml.steps[count].branch
+  } catch (e) {
+    branchName = null
+  }
+  
   // update count, update hasura and local file
   for (y = 0; y < configyml.steps[count].actions.length; y++) {
     var array = configyml.steps[count].actions[y]
     console.log("Responding")
     console.log(y)
     console.log(configyml.steps[count].actions.length)
+
     // Executes an action based on the step in the YAML
     if (array.type == "respond") {
       console.log("Creating comment...")
@@ -183,13 +193,6 @@ const nextStep = async (count, context, configyml, issueno) => {
         issue_number: issueno,
       });
       context.octokit.issues.createComment(issueComment)
-      weekno = responseFile.charAt(0)
-
-      if (isNaN(weekno)) {
-        weekno = configyml.steps[count-1].actions[y].with.charAt(0)
-      }
-
-      console.log(weekno)
     }
 
     if (array.type == "createIssue") {
@@ -202,8 +205,6 @@ const nextStep = async (count, context, configyml, issueno) => {
       });
 
       context.octokit.issues.create(issueBody)
-      weekno = responseFile.charAt(0)
-      console.log(weekno)
     } 
 
     if (array.type == "closeIssue") {
@@ -217,7 +218,7 @@ const nextStep = async (count, context, configyml, issueno) => {
     }
   }
   
-  return weekno
+  return branchName
 }
 
 const workEvaluation = async (typeOfStep, context, configyml) => {
