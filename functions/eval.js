@@ -40,21 +40,25 @@ const PRmerge = async (context, configyml) => {
 
     var pullFiles = await context.octokit.pulls.listFiles(fileCommits)
 
-    for (i = 0; i < configyml.steps[count].actions[0].files.length; i++) {
-      test2Array.push(configyml.steps[count].actions[0].files[i])
-      for (y = 0; y < pullFiles.data.length; y++) {
-        if (configyml.steps[count].actions[0].files[i] == pullFiles.data[y].filename) {
-          testArray.push(pullFiles.data[y].filename)
+    if (configyml.steps[count].actions[0].files[0] != 'n/a') {
+      for (i = 0; i < configyml.steps[count].actions[0].files.length; i++) {
+        test2Array.push(configyml.steps[count].actions[0].files[i])
+        for (y = 0; y < pullFiles.data.length; y++) {
+          if (configyml.steps[count].actions[0].files[i] == pullFiles.data[y].filename) {
+            testArray.push(pullFiles.data[y].filename)
+          }
         }
       }
-    }
-
-    if (test2Array.length == testArray.length) {
-      console.log("Success!")
-        success = true
+  
+      if (test2Array.length == testArray.length) {
+        console.log("Success!")
+          success = true
+      } else {
+        console.log("Fail")
+          success = false
+      }
     } else {
-      console.log("Fail")
-        success = false
+      success = true
     }
 
     return [success, reslink, repolink, context.issue().owner, context.issue().repo]
