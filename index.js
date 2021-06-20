@@ -13,7 +13,7 @@ module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
   console.log("Push event")
-  if (context.payload.commits[context.payload.commits.length - 1].added[0].includes(".bit/course-details.md"))
+  if (context.payload.commits[context.payload.commits.length - 1].added[0].includes(".bit/course-details.md")) {
     start = true
   } else {
     start = false
