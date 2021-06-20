@@ -13,13 +13,13 @@ module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
   console.log("Push event")
-  try {
-    start = context.payload.commits[0].added[0].substring(0,4)
-  } catch (e) {
-    start = ""
+  if (context.payload.commits[context.payload.commits.length - 1].added[0].includes(".bit/course-details.md"))
+    start = true
+  } else {
+    start = false
   }
 
-  if (start == ".bit" && context.payload.commits[0].added[0] != ".bit/.progress") {
+  if (start && context.payload.commits[0].added[0] != ".bit/.progress") {
     let configData = await data.yamlFile(context);
     console.log("Deleting file...")
     await steps.deleteFile(context);
