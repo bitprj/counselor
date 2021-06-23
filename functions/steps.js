@@ -226,6 +226,7 @@ const workEvaluation = async (typeOfStep, context, configyml) => {
   if (typeOfStep[0] == "checks") {
     console.log("Checking checks")
     res = await eval.checks(context)
+    console.log(res.meta)
   } else if (typeOfStep[0] == "IssueComment") {
     console.log("Checking comment")
     res = await eval.IssueComment(context)
@@ -319,6 +320,8 @@ const startLab = async (context, configyml) => {
         repo: context.payload.repository.name,
         path: path,
     });
+    console.log('trying to start lab')
+    console.log(response.meta)
 
     response = Buffer.from(response.data.content, 'base64').toString()
     return await context.octokit.issues.create({
