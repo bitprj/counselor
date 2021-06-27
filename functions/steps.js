@@ -174,8 +174,10 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
      }
    }
    `
+    
+   var trackingName = `Start Step ${count}`;
    var attributes = { type: 'Start New Step', user: moveOn[3], repo: moveOn[2], repoName: moveOn[4], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
-   mixpanel.track('Start New Step', {
+   mixpanel.track(trackingName, {
     'user': moveOn[3], 
     'repo': moveOn[2], 
     'repoName': moveOn[4], 
