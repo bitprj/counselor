@@ -3,6 +3,9 @@ const gql = require('./graphql.js');
 const eval = require('./eval.js');
 const newrelic = require('newrelic');
 
+const mixpanel = require('mixpanel-browser');
+mixpanel.init(process.env.MIXPANEL_PROJECT_TOKEN);
+
 const newBranch = async (context, branch, count) => {
   const responseBody = context.issue({
     path: ".bit/.progress",
@@ -138,6 +141,16 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
    }
    `
     var attributes = { type: 'Feedback', feedback: moveOn[3], user: moveOn[4], repo: moveOn[2], repoName: moveOn[5], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
+    mixpanel.track('Feedback', {
+      'feedback': moveOn[3], 
+      'user': moveOn[4], 
+      'repo': moveOn[2], 
+      'repoName': moveOn[5], 
+      'title': configyml.steps[count].title, 
+      'link': moveOn[1], 
+      'path': path, 
+      'count': count 
+      });
   } else {
     var gqlrequest = `
     mutation insertProgress {
@@ -159,6 +172,15 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
    }
    `
    var attributes = { type: 'Start New Step', user: moveOn[3], repo: moveOn[2], repoName: moveOn[4], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
+   mixpanel.track('Start New Step', {
+    'user': moveOn[3], 
+    'repo': moveOn[2], 
+    'repoName': moveOn[4], 
+    'title': configyml.steps[count].title, 
+    'link': moveOn[1], 
+    'path': path, 
+    'count': count 
+    });
   }
  
  console.log(await gql.queryData(gqlrequest))
@@ -258,6 +280,11 @@ const startLab = async (context, configyml) => {
     const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url }
     newrelic.recordCustomEvent("CabinGithub", attributes)
 
+    mixpanel.track('Start Camp', {
+      'user': context.payload.repository.owner.login, 
+      'repo': context.payload.repository.html_url 
+     });
+    
     try {
         await context.octokit.repos.createOrUpdateFileContents({
           owner: context.payload.repository.owner.login,
@@ -305,6 +332,16 @@ const startLab = async (context, configyml) => {
       //log first step in newrelic
       const attributes = { type: 'Start New Step', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url, repoName: context.payload.repository.name, title: configyml.steps[0].title, path: path, count: 0 }
       newrelic.recordCustomEvent("CabinGithub", attributes)
+
+      //log in mixpanel first step
+      mixpanel.track('Start New Step', {
+        'user': context.payload.repository.owner.login, 
+        'repo': context.payload.repository.html_url, 
+        'repoName': context.payload.repository.name, 
+        'title': configyml.steps[0].title, 
+        'path': path, 
+        'count': 0 
+      });
     } catch (e) {
       console.log(e)
     }
