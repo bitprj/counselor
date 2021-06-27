@@ -3,8 +3,11 @@ const gql = require('./graphql.js');
 const eval = require('./eval.js');
 const newrelic = require('newrelic');
 
-const mixpanel = require('mixpanel-browser');
-mixpanel.init(process.env.MIXPANEL_PROJECT_TOKEN);
+// grab the Mixpanel factory
+var Mixpanel = require('mixpanel');
+
+// create an instance of the mixpanel client
+var mixpanel = Mixpanel.init(process.env.MIXPANEL_PROJECT_TOKEN);
 
 const newBranch = async (context, branch, count) => {
   const responseBody = context.issue({
