@@ -145,6 +145,7 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
    `
     var attributes = { type: 'Feedback', feedback: moveOn[3], user: moveOn[4], repo: moveOn[2], repoName: moveOn[5], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
     mixpanel.track('Feedback', {
+      'distinct_id': moveOn[4], 
       'feedback': moveOn[3], 
       'user': moveOn[4], 
       'repo': moveOn[2], 
@@ -287,6 +288,7 @@ const startLab = async (context, configyml) => {
     newrelic.recordCustomEvent("CabinGithub", attributes)
 
     mixpanel.track('Start Camp', {
+      'distinct_id': context.payload.repository.owner.login,
       'user': context.payload.repository.owner.login, 
       'repo': context.payload.repository.html_url 
      });
@@ -340,7 +342,8 @@ const startLab = async (context, configyml) => {
       newrelic.recordCustomEvent("CabinGithub", attributes)
 
       //log in mixpanel first step
-      mixpanel.track('Start New Step', {
+      mixpanel.track('Start First Step', {
+        'distinct_id': context.payload.repository.owner.login,
         'user': context.payload.repository.owner.login, 
         'repo': context.payload.repository.html_url, 
         'repoName': context.payload.repository.name, 
