@@ -11,7 +11,7 @@ var start;
 module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
-  console.log("Push event")
+  app.log.info("Push event")
   if (context.payload.commits[context.payload.commits.length - 1].added.includes(".bit/course-details.md")) {
     start = true
   } else {
@@ -20,6 +20,8 @@ module.exports = (app) => {
 
   if (start && context.payload.commits[0].added[0] != ".bit/.progress") {
     let configData = await data.yamlFile(context);
+    await steps.protectBranch(context); // can't merge
+    app.log.info("protecting")
     console.log("Deleting file...")
     await steps.deleteFile(context);
     await steps.startLab(context, configData);
@@ -32,6 +34,12 @@ module.exports = (app) => {
   console.log("Pull request")
   main(context, 'pull_request.closed');
  });
+
+ // when a new pr is created
+ app.on('pull_request.opened', async (context) => {
+  console.log("pull request opened");
+  main(context, 'pull_request.opened')
+});
 
  app.on('issue_comment.created', async (context) => {
   console.log("Issue comment created")
@@ -52,6 +60,8 @@ module.exports = (app) => {
   console.log("Branch created")
   main(context, 'create')
 });
+
+  
 };
 
 async function main(context, event) {
@@ -76,7 +86,9 @@ async function main(context, event) {
     if (condition == null) {
       return
     }
-  } else {
+  } 
+
+  else {
     console.log(currentStep, configData, event)
     let typeOfStep = await data.typeStep(currentStep, configData, event);
 
