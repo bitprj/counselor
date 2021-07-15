@@ -41,7 +41,7 @@ const newBranch = async (context, branch, count) => {
   });
   console.log("Attempting to update...")
   await context.octokit.repos.createOrUpdateFileContents(update)
-  console.log("Successfully updated!")  
+  console.log("Successfully updated!")
 }
 
 const deleteFile = async (context) => {
@@ -92,7 +92,7 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
         ref: branchName
       });
       countfile = await context.octokit.repos.getContent(responseBody);
-      
+
       const update = context.issue({
         path: ".bit/.progress",
         message: "Update progress",
@@ -111,14 +111,14 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
       });
       console.log("Attempting to update...")
       await context.octokit.repos.createOrUpdateFileContents(update)
-      console.log("Successfully updated!") 
-    } 
+      console.log("Successfully updated!")
+    }
   } catch (e) {
     console.log("End of week")
     console.log(e)
   }
 
-  var path = `.bit/responses/${configyml.steps[count-1].actions[0].with}`
+  var path = `.bit/responses/${configyml.steps[count - 1].actions[0].with}`
   var gqlrequest = ""
   var attributes = ""
 
@@ -145,16 +145,16 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
    `
     var attributes = { type: 'Feedback', feedback: moveOn[3], user: moveOn[4], repo: moveOn[2], repoName: moveOn[5], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
     mixpanel.track('Feedback', {
-      'distinct_id': moveOn[4], 
-      'feedback': moveOn[3], 
-      'user': moveOn[4], 
-      'repo': moveOn[2], 
-      'repoName': moveOn[5], 
-      'title': configyml.steps[count].title, 
-      'link': moveOn[1], 
-      'path': path, 
-      'count': count 
-      });
+      'distinct_id': moveOn[4],
+      'feedback': moveOn[3],
+      'user': moveOn[4],
+      'repo': moveOn[2],
+      'repoName': moveOn[5],
+      'title': configyml.steps[count].title,
+      'link': moveOn[1],
+      'path': path,
+      'count': count
+    });
   } else {
     var gqlrequest = `
     mutation insertProgress {
@@ -175,25 +175,25 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
      }
    }
    `
-    
-   var trackingName = `Start Step ${count}`;
-   var attributes = { type: 'Start New Step', user: moveOn[3], repo: moveOn[2], repoName: moveOn[4], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
-   mixpanel.track(trackingName, {
-    'distinct_id': moveOn[3], 
-    'user': moveOn[3], 
-    'repo': moveOn[2], 
-    'repoName': moveOn[4], 
-    'title': configyml.steps[count].title, 
-    'link': moveOn[1], 
-    'path': path, 
-    'count': count 
+
+    var trackingName = `Start Step ${count}`;
+    var attributes = { type: 'Start New Step', user: moveOn[3], repo: moveOn[2], repoName: moveOn[4], title: configyml.steps[count].title, link: moveOn[1], path: path, count: count }
+    mixpanel.track(trackingName, {
+      'distinct_id': moveOn[3],
+      'user': moveOn[3],
+      'repo': moveOn[2],
+      'repoName': moveOn[4],
+      'title': configyml.steps[count].title,
+      'link': moveOn[1],
+      'path': path,
+      'count': count
     });
   }
- 
- console.log(await gql.queryData(gqlrequest))
 
- // log in newrelic
- newrelic.recordCustomEvent("CabinGithub", attributes)
+  console.log(await gql.queryData(gqlrequest))
+
+  // log in newrelic
+  newrelic.recordCustomEvent("CabinGithub", attributes)
 }
 
 const nextStep = async (count, context, configyml, issueno) => {
@@ -204,7 +204,9 @@ const nextStep = async (count, context, configyml, issueno) => {
   } catch (e) {
     branchName = null
   }
-  
+
+  await checkForMergeNext(context, count+1, configyml);
+
   // update count, update hasura and local file
   for (y = 0; y < configyml.steps[count].actions.length; y++) {
     var array = configyml.steps[count].actions[y]
@@ -234,9 +236,11 @@ const nextStep = async (count, context, configyml, issueno) => {
       });
 
       context.octokit.issues.create(issueBody)
-    } 
+    }
 
-    if (array.type == "closeIssue") {
+    if (array.type == "closeIssue") { 
+      
+      // if this closes an issue, will the context be the same as if we opened a new pull request (that is what my code currently activates on)
       console.log("Closing issue...")
       const payload = context.issue({
         state: "closed",
@@ -246,7 +250,7 @@ const nextStep = async (count, context, configyml, issueno) => {
       context.octokit.issues.update(payload)
     }
   }
-  
+
   return branchName
 }
 
@@ -255,6 +259,7 @@ const workEvaluation = async (typeOfStep, context, configyml) => {
   if (typeOfStep[0] == "checks") {
     console.log("Checking checks")
     res = await eval.checks(context)
+
   } else if (typeOfStep[0] == "IssueComment") {
     console.log("Checking comment")
     res = await eval.IssueComment(context)
@@ -269,7 +274,7 @@ const workEvaluation = async (typeOfStep, context, configyml) => {
 }
 
 const startLab = async (context, configyml) => {
-    var gqlrequest = `
+  var gqlrequest = `
     mutation startCourse {
     insert_course_analytics(
         objects: {
@@ -282,41 +287,41 @@ const startLab = async (context, configyml) => {
     }
     }
     `
-    console.log(await gql.queryData(gqlrequest))
+  console.log(await gql.queryData(gqlrequest))
 
-    const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url }
-    newrelic.recordCustomEvent("CabinGithub", attributes)
+  const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url }
+  newrelic.recordCustomEvent("CabinGithub", attributes)
 
-    mixpanel.track('Start Camp', {
-      'distinct_id': context.payload.repository.owner.login,
-      'user': context.payload.repository.owner.login, 
-      'repo': context.payload.repository.html_url 
-     });
-    
-    try {
-        await context.octokit.repos.createOrUpdateFileContents({
-          owner: context.payload.repository.owner.login,
-          repo: context.payload.repository.name,
-          path: ".bit/.progress",
-          message: "Track progress",
-          content: Buffer.from(JSON.stringify(0)).toString('base64'),
-          committer: {
-            name: `counselorbot`,
-            email: "info@bitproject.org",
-          },
-          author: {
-            name: `counselorbot`,
-            email: "info@bitproject.org",
-          },
-        })
-      } catch (e) {
-        console.log(e)
-      }
-    
-    console.log("Tracked the progress...")
-    try{
-      var path = `.bit/responses/${configyml.before[0].body}`
-      var gqlrequest = `
+  mixpanel.track('Start Camp', {
+    'distinct_id': context.payload.repository.owner.login,
+    'user': context.payload.repository.owner.login,
+    'repo': context.payload.repository.html_url
+  });
+
+  try {
+    await context.octokit.repos.createOrUpdateFileContents({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      path: ".bit/.progress",
+      message: "Track progress",
+      content: Buffer.from(JSON.stringify(0)).toString('base64'),
+      committer: {
+        name: `counselorbot`,
+        email: "info@bitproject.org",
+      },
+      author: {
+        name: `counselorbot`,
+        email: "info@bitproject.org",
+      },
+    })
+  } catch (e) {
+    console.log(e)
+  }
+
+  console.log("Tracked the progress...")
+  try {
+    var path = `.bit/responses/${configyml.before[0].body}`
+    var gqlrequest = `
       mutation insertProgress {
           insert_users_progress(
           objects: {
@@ -334,45 +339,45 @@ const startLab = async (context, configyml) => {
           }
       }
       `
-      let res = await gql.queryData(gqlrequest)
-      console.log(res)
+    let res = await gql.queryData(gqlrequest)
+    console.log(res)
 
-      //log first step in newrelic
-      const attributes = { type: 'Start New Step', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url, repoName: context.payload.repository.name, title: configyml.steps[0].title, path: path, count: 0 }
-      newrelic.recordCustomEvent("CabinGithub", attributes)
+    //log first step in newrelic
+    const attributes = { type: 'Start New Step', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url, repoName: context.payload.repository.name, title: configyml.steps[0].title, path: path, count: 0 }
+    newrelic.recordCustomEvent("CabinGithub", attributes)
 
-      //log in mixpanel first step
-      mixpanel.track('Start First Step', {
-        'distinct_id': context.payload.repository.owner.login,
-        'user': context.payload.repository.owner.login, 
-        'repo': context.payload.repository.html_url, 
-        'repoName': context.payload.repository.name, 
-        'title': configyml.steps[0].title, 
-        'path': path, 
-        'count': 0 
-      });
-    } catch (e) {
-      console.log(e)
-    }
-    
-
-    console.log("Templated created...")
-    console.log("Attempting to get YAML")
-
-    // start lab by executing what is in the before portion of config.yml
-    let response = await context.octokit.repos.getContent({
-        owner: context.payload.repository.owner.login,
-        repo: context.payload.repository.name,
-        path: path,
+    //log in mixpanel first step
+    mixpanel.track('Start First Step', {
+      'distinct_id': context.payload.repository.owner.login,
+      'user': context.payload.repository.owner.login,
+      'repo': context.payload.repository.html_url,
+      'repoName': context.payload.repository.name,
+      'title': configyml.steps[0].title,
+      'path': path,
+      'count': 0
     });
+  } catch (e) {
+    console.log(e)
+  }
 
-    response = Buffer.from(response.data.content, 'base64').toString()
-    return await context.octokit.issues.create({
-      owner: context.payload.repository.owner.login,
-      repo: context.payload.repository.name,
-      title: configyml.before[0].title,
-      body: data.parseTable(response),
-    })
+
+  console.log("Templated created...")
+  console.log("Attempting to get YAML")
+
+  // start lab by executing what is in the before portion of config.yml
+  let response = await context.octokit.repos.getContent({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    path: path,
+  });
+
+  response = Buffer.from(response.data.content, 'base64').toString()
+  return await context.octokit.issues.create({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    title: configyml.before[0].title,
+    body: data.parseTable(response),
+  })
 }
 
 const workFlow = async (context) => {
@@ -411,6 +416,46 @@ const workFlow = async (context) => {
   }
 }
 
+const approvePr = async (context) => {
+  let issueNo = await data.issueNo(context);
+  comments = [
+    { body: 'Great job!' },
+  ]
+  options = { event: 'APPROVE', comments: comments }
+
+  console.log("approving")
+  await context.octokit.pulls.createReview({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    pull_number: issueNo,
+    event: "APPROVE",
+  })
+}
+
+const checkForMergeNext = async (context, count, configyml) => {
+  if (configyml.steps[count].title === "Merge the PR") {
+    await approvePr(context);
+  }
+}
+
+
+const protectBranch = async (context) => {
+  console.log("protecting")
+  await context.octokit.repos.updateBranchProtection({
+    "owner": context.payload.repository.owner.name,
+    "repo": context.payload.repository.name,
+    "branch": "main",
+    "required_status_checks": null,
+   "required_status_checks.strict": null,
+    "required_status_checks.contexts": null,
+    "enforce_admins": true,
+    "required_pull_request_reviews": {true: true}, // using true by itself won't work
+    "restrictions": null,
+    "restrictions.users": [context.payload.repository.owner.login],
+    "restrictions.teams": ["bitprj"]
+  })
+}
+
 exports.startLab = startLab
 exports.workEvaluation = workEvaluation
 exports.nextStep = nextStep
@@ -418,3 +463,5 @@ exports.workFlow = workFlow
 exports.deleteFile = deleteFile
 exports.updateFiles = updateFiles
 exports.newBranch = newBranch
+exports.protectBranch = protectBranch
+exports.checkForMergeNext = checkForMergeNext
