@@ -433,11 +433,14 @@ const approvePr = async (context) => {
 }
 
 const checkForMergeNext = async (context, count, configyml) => {
+  console.log(configyml.steps[count])
   if (configyml.steps[count].title === "Merge the PR") {
+    console.log('merge the pr')
     await approvePr(context);
   }
   else if (configyml.steps[count].stepType === "PRmerge") {
     await approvePr(context);
+    console.log(prmerge)
   }
 }
 
