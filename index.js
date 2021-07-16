@@ -12,9 +12,12 @@ module.exports = (app) => {
  app.log.info("Yay, the app was loaded!");
  app.on("push", async (context) => {
   app.log.info("Push event")
+
   if (context.payload.commits[context.payload.commits.length - 1].added.includes(".bit/course-details.md")) {
+    console.log("True")
     start = true
   } else {
+    console.log("False")
     start = false
   }
 
@@ -22,13 +25,13 @@ module.exports = (app) => {
 
   if (start && context.payload.commits[0].added[0] != ".bit/.progress") {
     let configData = await data.yamlFile(context);
-    await steps.protectBranch(context); // can't merge
     app.log.info("protecting")
     console.log("Deleting file...")
     await steps.deleteFile(context);
     await steps.startLab(context, configData);
     console.log("Committing workflow files")
     await steps.workFlow(context);
+    await steps.protectBranch(context); // can't merge
   }
  });
 
@@ -41,12 +44,6 @@ module.exports = (app) => {
   console.log("Pull request")
   main(context, 'pull_request.closed');
  });
-
- // when a new pr is created
- app.on('pull_request.opened', async (context) => {
-  console.log("pull request opened");
-  main(context, 'pull_request.opened')
-});
 
  app.on('issue_comment.created', async (context) => {
   console.log("Issue comment created")
@@ -88,6 +85,7 @@ async function main(context, event) {
   }
 
   if (event == 'create') {
+    console.log("create event")
     let condition = await steps.newBranch(context, context.payload.ref, currentStep)
     if (condition == null) {
       return
@@ -98,10 +96,12 @@ async function main(context, event) {
     await steps.checkForMergeNext(context, currentStep, configData);
   }
   else {
-    console.log(currentStep, configData, event)
+    // console.log(currentStep, configData, event)
+    console.log(event)
     let typeOfStep = await data.typeStep(currentStep, configData, event);
 
     if (typeOfStep == null) {
+      console.log("null type")
       return
     }
 
