@@ -36,7 +36,6 @@ const queryData = async (queryString) => {
         body: JSON.stringify({query: queryString})
     });
     const responseData = await data.json();
-    console.log(responseData)
 
     return responseData;
 };
