@@ -84,6 +84,7 @@ async function main(context, event) {
     
   } catch (e) {
     console.log(e)
+    return;
   }
 
   if (event == 'create') {
