@@ -55,7 +55,8 @@ const deleteFile = async (context) => {
       sha: file[0].data.sha,
     });
   } catch (e) {
-    console.log("Error: had trouble deleting workflow")
+    console.log("Error: had trouble deleting workflow");
+    console.log(e);
   }
 
 }

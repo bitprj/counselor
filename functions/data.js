@@ -42,9 +42,10 @@ const issueNo = async (context) => {
 
 const typeStep = async (currentStep, configyml, eventTrigger) => {
     const step = configyml.steps[currentStep]
+    
     var stepType = step.stepType;
     var event = configyml.steps[currentStep].event
-
+    console.log(event);
     try {
       var files = step.actions[0].files
       var scripts = step.actions[0].scripts
