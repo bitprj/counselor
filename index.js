@@ -83,7 +83,9 @@ async function main(context, event) {
     console.log(currentStep);
     
   } catch (e) {
+    console.log(e)
     return;
+
   }
 
   if (event == 'create') {
