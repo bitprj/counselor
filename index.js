@@ -18,6 +18,8 @@ module.exports = (app) => {
     start = false
   }
 
+  app.log.info(context.payload.commits[0])
+
   if (start && context.payload.commits[0].added[0] != ".bit/.progress") {
     let configData = await data.yamlFile(context);
     await steps.protectBranch(context); // can't merge
@@ -60,19 +62,16 @@ module.exports = (app) => {
   console.log("Branch created")
   main(context, 'create')
 });
-
-  
 };
 
 async function main(context, event) {
+  console.log("entering main")
   let currentStep = ""
   let configData = await data.yamlFile(context);
-
+  console.log(configData)
   if (configData == null) {
     return
   }
-
-  console.log("Got configyml!")
 
   try {
     currentStep = await data.findStep(context);
@@ -93,6 +92,7 @@ async function main(context, event) {
     let typeOfStep = await data.typeStep(currentStep, configData, event);
 
     if (typeOfStep == null) {
+      await steps.checkForMergeNext(context, currentStep, configData)
       return
     }
 
@@ -107,6 +107,7 @@ async function main(context, event) {
 
     if (issueNo == null) {
       return
+
     }
   
     if (moveOn[0] == true) {

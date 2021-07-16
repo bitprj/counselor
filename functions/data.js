@@ -89,9 +89,10 @@ const yamlFile = async (context) => {
         var yamlfile = await context.octokit.repos.getContent({
           owner: context.payload.repository.owner.login,
           repo: context.payload.repository.name,
-          path:".bit/config.yml",
+          path: ".bit/config.yml",
     });
     } catch (e) {
+      console.log(e)
         return null
     }
 
