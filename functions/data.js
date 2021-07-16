@@ -1,3 +1,4 @@
+const fetch = require("node-fetch");
 const gql = require('./graphql.js');
 const yaml = require('js-yaml');
 
@@ -62,14 +63,18 @@ const typeStep = async (currentStep, configyml, eventTrigger) => {
 
 const findStep = async (context) => {
     const params = context.issue() 
+    console.log("beginnnig of findstep")
 
-    gqlrequest = `
-    query getCount {
-        users_progress(where: {repoName: {_eq: "${params.repo}"}, user: {_eq: "${params.owner}"}}, order_by: {startTime: desc}) {
-          count
-        }
-      }      
-    `
+    const hasuraCountQueryEndpoint = "https://counselorbot.azurewebsites.net/api/hasuraCountQuery?code=dWJdQz4o2bEoGesnmZDi9oi8/v7xk8NaVEU9ykgxC1xLPrCeAkd96A==";
+    const options = {
+      method: "POST",
+      headers: {
+        repo: params.repo,
+        owner: params.owner
+      }
+    }
+    const request = await fetch(hasuraCountQueryEndpoint, options)
+    const data = await request.json();
     // output:
     // {
     //     "data": {
@@ -80,9 +85,7 @@ const findStep = async (context) => {
     //       ]
     //     }
     //   }
-    let result = await gql.queryData(gqlrequest)
-    count = result.data.users_progress[0].count
-    return count
+    return data.step;
 }
 
 const yamlFile = async (context) => {

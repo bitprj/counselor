@@ -78,10 +78,12 @@ async function main(context, event) {
   }
 
   try {
-    currentStep = await data.findStep(context);
     console.log("Getting current step!")
+    currentStep = await data.findStep(context);
+    console.log(currentStep);
+    
   } catch (e) {
-    return
+    console.log(e)
   }
 
   if (event == 'create') {
