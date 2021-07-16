@@ -1,3 +1,4 @@
+const fetch = require("node-fetch");
 const gql = require('./graphql.js');
 const yaml = require('js-yaml');
 
@@ -42,9 +43,10 @@ const issueNo = async (context) => {
 
 const typeStep = async (currentStep, configyml, eventTrigger) => {
     const step = configyml.steps[currentStep]
+    
     var stepType = step.stepType;
     var event = configyml.steps[currentStep].event
-
+    console.log(event);
     try {
       var files = step.actions[0].files
       var scripts = step.actions[0].scripts
@@ -61,14 +63,18 @@ const typeStep = async (currentStep, configyml, eventTrigger) => {
 
 const findStep = async (context) => {
     const params = context.issue() 
+    console.log("beginnnig of findstep")
 
-    gqlrequest = `
-    query getCount {
-        users_progress(where: {repoName: {_eq: "${params.repo}"}, user: {_eq: "${params.owner}"}}, order_by: {startTime: desc}) {
-          count
-        }
-      }      
-    `
+    const hasuraCountQueryEndpoint = "https://counselorbot.azurewebsites.net/api/hasuraCountQuery?code=dWJdQz4o2bEoGesnmZDi9oi8/v7xk8NaVEU9ykgxC1xLPrCeAkd96A==";
+    const options = {
+      method: "POST",
+      headers: {
+        repo: params.repo,
+        owner: params.owner
+      }
+    }
+    const request = await fetch(hasuraCountQueryEndpoint, options)
+    const data = await request.json();
     // output:
     // {
     //     "data": {
@@ -79,9 +85,7 @@ const findStep = async (context) => {
     //       ]
     //     }
     //   }
-    let result = await gql.queryData(gqlrequest)
-    count = result.data.users_progress[0].count
-    return count
+    return data.step;
 }
 
 const yamlFile = async (context) => {
@@ -89,9 +93,10 @@ const yamlFile = async (context) => {
         var yamlfile = await context.octokit.repos.getContent({
           owner: context.payload.repository.owner.login,
           repo: context.payload.repository.name,
-          path:".bit/config.yml",
+          path: ".bit/config.yml",
     });
     } catch (e) {
+      console.log(e)
         return null
     }
 
