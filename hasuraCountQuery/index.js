@@ -38,5 +38,5 @@ const queryData = async (queryString) => {
     const responseData = await data.json();
     console.log(responseData)
 
-    return responseData.data.users_progress[0].count;
+    return responseData;
 };

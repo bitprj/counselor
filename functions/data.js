@@ -87,7 +87,7 @@ const findStep = async (context) => {
     //       ]
     //     }
     //   }
-    return data.step;
+    return data.data.users_progress[0].count;
 }
 
 const yamlFile = async (context) => {
