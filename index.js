@@ -125,7 +125,7 @@ async function main(context, event) {
   
     if (moveOn[0] == true) {
       let branchName = await steps.nextStep(currentStep, context, configData, issueNo);
-      await steps.updateFiles(typeOfStep, moveOn, count, configyml, branchName, context)
+      await steps.updateFiles(typeOfStep, moveOn, currentStep, configyml, branchName, context)
     }
   }
 }
