@@ -207,7 +207,7 @@ const nextStep = async (count, context, configyml, issueno) => {
   }
 
   console.log("running checkForMergeNext in nextStep");
-  await checkForMergeNext(context, count+1, configyml);
+  await checkForMergeNext(context, count + 1, configyml);
 
   // update count, update hasura and local file
   for (y = 0; y < configyml.steps[count].actions.length; y++) {
@@ -240,8 +240,8 @@ const nextStep = async (count, context, configyml, issueno) => {
       context.octokit.issues.create(issueBody)
     }
 
-    if (array.type == "closeIssue") { 
-      
+    if (array.type == "closeIssue") {
+
       // if this closes an issue, will the context be the same as if we opened a new pull request (that is what my code currently activates on)
       console.log("Closing issue...")
       const payload = context.issue({
@@ -419,19 +419,25 @@ const workFlow = async (context) => {
 }
 
 const approvePr = async (context) => {
-  let issueNo = await data.issueNo(context);
-  comments = [
-    { body: 'Great job!' },
-  ]
-  options = { event: 'APPROVE', comments: comments }
+  try {
+    let issueNo = await data.issueNo(context);
+    comments = [
+      { body: 'Great job!' },
+    ]
+    options = { event: 'APPROVE', comments: comments }
 
-  console.log("approving")
-  await context.octokit.pulls.createReview({
-    owner: context.payload.repository.owner.login,
-    repo: context.payload.repository.name,
-    pull_number: issueNo,
-    event: "APPROVE",
-  })
+    console.log("approving")
+    await context.octokit.pulls.createReview({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      pull_number: issueNo,
+      event: "APPROVE",
+    })
+  }
+  catch (e) {
+    console.log("APPROVE ERROR: ")
+    console.log(e)
+  }
 }
 
 const checkForMergeNext = async (context, count, configyml) => {
@@ -455,10 +461,10 @@ const protectBranch = async (context) => {
     "repo": context.payload.repository.name,
     "branch": "main",
     "required_status_checks": null,
-   "required_status_checks.strict": null,
+    "required_status_checks.strict": null,
     "required_status_checks.contexts": null,
     "enforce_admins": true,
-    "required_pull_request_reviews": {true: true}, // using true by itself won't work
+    "required_pull_request_reviews": { true: true }, // using true by itself won't work
     "restrictions": null,
     "restrictions.users": [context.payload.repository.owner.login],
     "restrictions.teams": ["bitprj"]
