@@ -256,7 +256,7 @@ const nextStep = async (count, context, configyml, issueno) => {
   return branchName
 }
 
-const workEvaluation = async (typeOfStep, context, configyml) => {
+const workEvaluation = async (typeOfStep, context, configyml, count) => {
   var res = []
   if (typeOfStep[0] == "checks") {
     console.log("Checking checks")
@@ -267,7 +267,7 @@ const workEvaluation = async (typeOfStep, context, configyml) => {
     res = await eval.IssueComment(context)
   } else if (typeOfStep[0] == "PRmerge") {
     console.log("Checking PR")
-    res = await eval.PRmerge(context, configyml)
+    res = await eval.PRmerge(context, configyml, count)
   } else if (typeOfStep[0] == "feedback") {
     console.log("Receiving feedback")
     res = await eval.feedback(context)

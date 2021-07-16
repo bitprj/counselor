@@ -111,7 +111,7 @@ async function main(context, event) {
 
     console.log("The type: " + typeOfStep)
   
-    let moveOn = await steps.workEvaluation(typeOfStep, context, configData);
+    let moveOn = await steps.workEvaluation(typeOfStep, context, configData, currentStep);
     console.log("moveOn: " + moveOn)
   
     console.log("Successfully evaluated")

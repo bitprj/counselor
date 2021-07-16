@@ -14,8 +14,6 @@ module.exports = async function (context, req) {
       }      
     `
     const step = await queryData(gqlrequest);
-
-exports.queryData = queryData;
     context.res = {
         // status: 200, /* Defaults to 200 */
         body: {step}
