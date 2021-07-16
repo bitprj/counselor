@@ -437,16 +437,11 @@ const checkForMergeNext = async (context, count, configyml) => {
   console.log("Running check for merge next");
   console.log("Count: " + count);
 
-  console.log("ENTIRE YAML: ");
-  console.log(configyml);
 
   console.log("STEPS YAML: ");
   console.log(configyml.steps[count])
-  if (configyml.steps[count].title == "Merge the PR") {
-    console.log('merge the pr')
-    await approvePr(context);
-  }
-  else if (configyml.steps[count].stepType == "PRmerge") {
+
+  if (configyml.steps[count].stepType == "PRmerge") {
     await approvePr(context);
   }
 }

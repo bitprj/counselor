@@ -33,6 +33,7 @@ module.exports = (app) => {
  });
 
  app.on('pull_request.ready_for_review', async (context) => {
+   console.log("pull request ready")
   main(context, "pull_request.ready_for_review");
  })
 
@@ -61,6 +62,8 @@ module.exports = (app) => {
       main(context, 'workflow_run.completed');
    }
  });
+
+ // mark ready for review which triggers check for next step
 
  app.on('create', async (context) => {
   console.log("Branch created")
@@ -91,7 +94,8 @@ async function main(context, event) {
     }
   }
   else if (event == "pull_request.ready_for_review") {
-    await steps.checkForMergeNext(context, currentStep+1, configData);
+    // for starting off step 1 ready for review
+    await steps.checkForMergeNext(context, currentStep, configData);
   }
   else {
     console.log(currentStep, configData, event)
