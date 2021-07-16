@@ -84,6 +84,8 @@ async function main(context, event) {
     
   } catch (e) {
     console.log(e)
+    return;
+
   }
 
   if (event == 'create') {
@@ -109,7 +111,7 @@ async function main(context, event) {
 
     console.log("The type: " + typeOfStep)
   
-    let moveOn = await steps.workEvaluation(typeOfStep, context, configData);
+    let moveOn = await steps.workEvaluation(typeOfStep, context, configData, currentStep);
     console.log("moveOn: " + moveOn)
   
     console.log("Successfully evaluated")
@@ -123,7 +125,7 @@ async function main(context, event) {
   
     if (moveOn[0] == true) {
       let branchName = await steps.nextStep(currentStep, context, configData, issueNo);
-      await steps.updateFiles(typeOfStep, moveOn, count, configyml, branchName, context)
+      await steps.updateFiles(typeOfStep, moveOn, currentStep, configyml, branchName, context)
     }
   }
 }

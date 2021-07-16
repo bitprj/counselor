@@ -66,6 +66,8 @@ const findStep = async (context) => {
     console.log("beginnnig of findstep")
 
     const hasuraCountQueryEndpoint = "https://counselorbot.azurewebsites.net/api/hasuraCountQuery?code=dWJdQz4o2bEoGesnmZDi9oi8/v7xk8NaVEU9ykgxC1xLPrCeAkd96A==";
+
+    console.log(params)
     const options = {
       method: "POST",
       headers: {
@@ -85,7 +87,8 @@ const findStep = async (context) => {
     //       ]
     //     }
     //   }
-    return data.step;
+    console.log(data)
+    return data.step.data.users_progress[0].count;
 }
 
 const yamlFile = async (context) => {

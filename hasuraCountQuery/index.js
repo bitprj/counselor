@@ -5,9 +5,6 @@ module.exports = async function (context, req) {
 
     const repo = req.headers.repo;
     const owner = req.headers.owner;
-
-    // const HASURA_ENDPOINT = process.env.HASURA_ENDPOINT;
-    // const HASURA_ADMIN_SECRET = process.env.HASURA_ADMIN_SECRET;
     
     gqlrequest = `
     query getCount {
@@ -17,8 +14,6 @@ module.exports = async function (context, req) {
       }      
     `
     const step = await queryData(gqlrequest);
-
-exports.queryData = queryData;
     context.res = {
         // status: 200, /* Defaults to 200 */
         body: {step}
@@ -39,7 +34,6 @@ const queryData = async (queryString) => {
         body: JSON.stringify({query: queryString})
     });
     const responseData = await data.json();
-    console.log(responseData)
 
-    return responseData.data.users_progress[0].count;
+    return responseData;
 };
