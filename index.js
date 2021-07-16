@@ -32,6 +32,10 @@ module.exports = (app) => {
   }
  });
 
+ app.on('pull_request.ready_for_review', async (context) => {
+  main(context, "pull_request.ready_for_review");
+ })
+
  app.on('pull_request.closed', async (context) => {
   console.log("Pull request")
   main(context, 'pull_request.closed');
@@ -85,14 +89,15 @@ async function main(context, event) {
     if (condition == null) {
       return
     }
-  } 
-
+  }
+  else if (event == "pull_request.ready_for_review") {
+    await steps.checkForMergeNext(context, currentStep+1, configData);
+  }
   else {
     console.log(currentStep, configData, event)
     let typeOfStep = await data.typeStep(currentStep, configData, event);
 
     if (typeOfStep == null) {
-      await steps.checkForMergeNext(context, currentStep, configData)
       return
     }
 
