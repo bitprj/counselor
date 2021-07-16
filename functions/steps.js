@@ -463,7 +463,7 @@ const protectBranch = async (context) => {
     "required_status_checks": null,
     "required_status_checks.strict": null,
     "required_status_checks.contexts": null,
-    "enforce_admins": true,
+    "enforce_admins": null,
     "required_pull_request_reviews": { true: true }, // using true by itself won't work
     "restrictions": null,
     "restrictions.users": [context.payload.repository.owner.login],
