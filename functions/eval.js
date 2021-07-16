@@ -26,7 +26,7 @@ const IssueComment = async (context) => {
     return [success, reslink, repolink, context.issue().owner, context.issue().repo]
 }
 
-const PRmerge = async (context, configyml) => {
+const PRmerge = async (context, configyml, count) => {
     let repolink = context.payload.repository.html_url
     let reslink = context.payload.pull_request.html_url;
     let success = false;
@@ -37,6 +37,8 @@ const PRmerge = async (context, configyml) => {
     const fileCommits = context.issue({
       pull_number: context.payload.pull_request.number,
     })
+    console.log("CONFIG YAML");
+    console.log(configyml);
 
     var pullFiles = await context.octokit.pulls.listFiles(fileCommits)
 
