@@ -448,7 +448,6 @@ const checkForMergeNext = async (context, count, configyml) => {
   }
   else if (configyml.steps[count].stepType == "PRmerge") {
     await approvePr(context);
-    console.log(prmerge)
   }
 }
 
