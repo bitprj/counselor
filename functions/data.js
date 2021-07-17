@@ -62,33 +62,28 @@ const typeStep = async (currentStep, configyml, eventTrigger) => {
 }
 
 const findStep = async (context) => {
-    const params = context.issue() 
-    console.log("beginnnig of findstep")
+  const params = context.issue() 
 
-    const hasuraCountQueryEndpoint = "https://counselorbot.azurewebsites.net/api/hasuraCountQuery?code=dWJdQz4o2bEoGesnmZDi9oi8/v7xk8NaVEU9ykgxC1xLPrCeAkd96A==";
-
-    console.log(params)
-    const options = {
-      method: "POST",
-      headers: {
-        repo: params.repo,
-        owner: params.owner
+  gqlrequest = `
+  query getCount {
+      users_progress(where: {repoName: {_eq: "${params.repo}"}, user: {_eq: "${params.owner}"}}, order_by: {startTime: desc}) {
+        count
       }
-    }
-    const request = await fetch(hasuraCountQueryEndpoint, options)
-    const data = await request.json();
-    // output:
-    // {
-    //     "data": {
-    //       "users_progress": [
-    //         {
-    //           "count": 3
-    //         }
-    //       ]
-    //     }
-    //   }
-    console.log(data)
-    return data.step.data.users_progress[0].count;
+    }      
+  `
+  // output:
+  // {
+  //     "data": {
+  //       "users_progress": [
+  //         {
+  //           "count": 3
+  //         }
+  //       ]
+  //     }
+  //   }
+  let result = await gql.queryData(gqlrequest)
+  count = result.data.users_progress[0].count
+  return count
 }
 
 const yamlFile = async (context) => {
