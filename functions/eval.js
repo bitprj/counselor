@@ -30,6 +30,7 @@ const PRmerge = async (context, configyml) => {
     let repolink = context.payload.repository.html_url
     let reslink = context.payload.pull_request.html_url;
     let success = false;
+    let files = '';
 
     var test2Array = []
     var testArray = []
@@ -39,8 +40,14 @@ const PRmerge = async (context, configyml) => {
     })
 
     var pullFiles = await context.octokit.pulls.listFiles(fileCommits)
-
-    if (configyml.steps[count].actions[0].files[0] != 'n/a') {
+    
+    try {
+        files = configyml.steps[count].actions[0].files[0]
+    } catch (e) {
+        files = 'n/a'
+    }
+    
+    if (files != 'n/a') {
       for (i = 0; i < configyml.steps[count].actions[0].files.length; i++) {
         test2Array.push(configyml.steps[count].actions[0].files[i])
         for (y = 0; y < pullFiles.data.length; y++) {
