@@ -5,6 +5,7 @@
 
 const data = require('./functions/data.js');
 const steps = require('./functions/steps.js');
+const newrelic = require('newrelic');
 
 var start;
 
@@ -13,13 +14,23 @@ module.exports = (app) => {
   app.on("push", async (context) => {
     app.log.info("Push event")
 
-    if (context.payload.commits[context.payload.commits.length - 1].added.includes(".bit/course-details.md")) {
-      console.log("True")
-      start = true
-    } else {
-      console.log("False")
-      start = false
-    }
+    // console.log(context.payload.commits)
+
+    // console.log("---------")
+
+    // console.log(context.payload.commits[context.payload.commits.length - 1].added)
+
+    console.log("---------")
+
+    console.log(context.payload.commits[context.payload.commits.length - 1].added.includes(".bit/course-details.md"))
+
+      if (context.payload.commits[context.payload.commits.length - 1].added.includes(".bit/course-details.md")) {
+        console.log("True")
+        start = true
+      } else {
+        console.log("False")
+        start = false
+      }
 
     app.log.info(context.payload.commits[0])
 
@@ -120,7 +131,6 @@ async function main(context, event) {
 
     if (issueNo == null) {
       return
-
     }
 
     if (moveOn[0] == true) {
