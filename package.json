@@ -11,7 +11,17 @@
   "license": "ISC",
   "repository": "github:probot/example-azure-function",
   "dependencies": {
-    "@probot/adapter-azure-functions": "^1.0.12"
+    "@probot/adapter-azure-functions": "^1.0.12",
+    "@octokit/core": "^3.2.5",
+    "body-parser": "^1.19.0",
+    "cors": "^2.8.5",
+    "jest": "^26.6.3",
+    "js-yaml": "^4.0.0",
+    "nock": "^13.1.1",
+    "probot": "^11.4.1",
+    "ruby": "^0.6.1",
+    "smee-client": "^1.2.2",
+    "uvu": "^0.5.1"
   },
   "devDependencies": {
     "@azure/functions": "^1.2.3",
