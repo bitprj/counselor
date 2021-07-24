@@ -256,11 +256,11 @@ const nextStep = async (count, context, configyml, issueno) => {
   return branchName
 }
 
-const workEvaluation = async (typeOfStep, context, configyml, count) => {
+const workEvaluation = async (typeOfStep, context, configyml, count, issueNo) => {
   var res = []
   if (typeOfStep[0] == "checks") {
     console.log("Checking checks")
-    res = await evaluation.checks(context)
+    res = await evaluation.checks(context, issueNo)
 
   } else if (typeOfStep[0] == "IssueComment") {
     console.log("Checking comment")

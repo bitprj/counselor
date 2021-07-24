@@ -9,11 +9,9 @@ const steps = require('./functions/steps.js');
 var start;
 
 module.exports = (app) => {
-  console.log("Yay! The app was loaded")
-
+  // console.log("Yay! The app was loaded")
   app.on("push", async (context) => {
     console.log("Push event");
-
     try {
       if (context.payload.commits[context.payload.commits.length - 1].added.includes(".bit/course-details.md")) {
         console.log("True");
@@ -127,12 +125,12 @@ async function main(context, event) {
 
     console.log("The type: " + typeOfStep)
 
-    let moveOn = await steps.workEvaluation(typeOfStep, context, configData, currentStep);
+    let issueNo = await data.issueNo(context);
+    let moveOn = await steps.workEvaluation(typeOfStep, context, configData, currentStep, issueNo);
     console.log("moveOn: " + moveOn)
 
     console.log("Successfully evaluated")
     console.log("Next Step function executing")
-    let issueNo = await data.issueNo(context)
 
     if (issueNo == null) {
       return
