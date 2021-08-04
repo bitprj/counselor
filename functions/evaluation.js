@@ -14,6 +14,8 @@ const checks = async (context, issueNo) => {
     success = true;
   }
   else {
+
+    // the check failed
     let queryString = `
     query getError {
       users_errors(order_by: {updated_at: desc}, where: {repo: {_eq: "${repo}"}, user: {_eq: "${user}"}}) {
@@ -34,6 +36,7 @@ const checks = async (context, issueNo) => {
       issue_number: issueNo,
       body: `🛑 There was an error: ${error} 🛑`,
     });
+
   }
 
   return [success, reslink, repolink, context.issue().owner, context.issue().repo]

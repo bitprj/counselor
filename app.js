@@ -10,7 +10,41 @@ var start;
 
 module.exports = (app) => {
   // console.log("Yay! The app was loaded")
+
+  app.on('issues.closed', async (context) => {
+    // check if the bot closed the issue
+    console.log("issue has been closed");
+    if (context.payload.sender.login != "counselorbot-serverless-pro-max[bot]") {
+      // list all issue comments
+      const issuesComments = await context.octokit.issues.listComments({
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        issue_number: context.payload.issue.number,
+      });
+
+
+      // reopen the issue of the last comment is not closed via oauth
+      try {
+        if (issuesComments.data.length == 0 || issuesComments.data[issuesComments.data.length - 1].body != "closed via oauth") {
+          await context.octokit.issues.update({
+            owner: context.payload.repository.owner.login,
+            repo: context.payload.repository.name,
+            issue_number: context.payload.issue.number,
+            state: "open"
+          })
+        }
+      }
+      catch (e) {
+        console.log("error!!!")
+        throw new Error(e);
+      }
+
+    }
+  })
+
+
   app.on("push", async (context) => {
+    // only runs when the course starts
     console.log("Push event");
     try {
       if (context.payload.commits[context.payload.commits.length - 1].added.includes(".bit/course-details.md")) {
@@ -23,7 +57,8 @@ module.exports = (app) => {
 
       console.log(context.payload.commits[0])
 
-      if (start && context.payload.commits[0].added[0] != ".bit/.progress") {
+      // if (start && context.payload.commits[0].added[0] != ".bit/.progress") {
+      if (start) {
         let configData = await data.yamlFile(context);
         console.log("protecting")
         console.log("Deleting file...")
@@ -52,7 +87,7 @@ module.exports = (app) => {
 
   app.on('issue_comment.created', async (context) => {
     console.log("Issue comment created")
-    if (context.payload.sender.login != "counselorbot[bot]") {
+    if (context.payload.sender.login != "counselorbot[bot]" && context.payload.comment.body != "closed via oauth") {
       main(context, 'issue_comment.created');
     }
   });
@@ -71,6 +106,7 @@ module.exports = (app) => {
     console.log("Branch created")
     main(context, 'create')
   });
+  // check new new branch event, and cancel the most recent workflow run
 };
 
 async function main(context, event) {
@@ -95,20 +131,15 @@ async function main(context, event) {
     console.log(e)
     console.log("no current step");
     return;
-
   }
 
   console.log("running event checks");
-  console.log(event)
 
   if (event == 'create') {
     console.log("create event")
-    let condition = await steps.newBranch(context, context.payload.ref, currentStep)
-    if (condition == null) {
-      return
-    }
+    await steps.newBranch(context, context.payload.ref, currentStep);
   }
-  else if (event == "pull_request.ready_for_review") {
+  if (event == "pull_request.ready_for_review") {
     // for starting off step 1 ready for review
     console.log("Calling checkForMergenext in app.js")
     await steps.checkForMergeNext(context, currentStep, configData);
@@ -127,13 +158,13 @@ async function main(context, event) {
 
     let issueNo = await data.issueNo(context);
     let moveOn = await steps.workEvaluation(typeOfStep, context, configData, currentStep, issueNo);
-    console.log("moveOn: " + moveOn)
 
+    console.log("moveOn: " + moveOn)
     console.log("Successfully evaluated")
     console.log("Next Step function executing")
 
     if (issueNo == null) {
-      return
+      throw new Error("issueNo is null")
     }
 
     if (moveOn[0] == true) {
@@ -142,3 +173,17 @@ async function main(context, event) {
     }
   }
 }
+
+
+/*
+function hello() {
+  return "Hello World"
+}
+
+module.exports = hello
+*/
+
+// will work with adding .progress
+
+
+

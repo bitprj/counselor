@@ -10,8 +10,30 @@ const evaluation = require('./evaluation.js');
 // var mixpanel = Mixpanel.init(process.env.MIXPANEL_PROJECT_TOKEN);
 
 const newBranch = async (context, branch, count) => {
+
+  // code prevents two workflows from running and failing
+  const runs = await context.octokit.actions.listWorkflowRunsForRepo({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    per_page: 1
+  });
+
+  console.log(JSON.stringify(runs))
+  const id = runs.data.workflow_runs[0].id;
+
+  await context.octokit.actions.cancelWorkflowRun({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    run_id: id,
+  });
+
+  console.log(id);
+
+
+  // [DELETE] .progress information
+
   const responseBody = context.issue({
-    path: ".bit/.progress",
+    path: ".github/workflows/README.md",
     ref: branch
   });
 
@@ -24,12 +46,13 @@ const newBranch = async (context, branch, count) => {
 
 
   const update = context.issue({
-    path: ".bit/.progress",
+    path: ".github/workflows/README.md",
     message: "Update progress",
-    content: Buffer.from(count.toString()).toString('base64'),
+    // content: Buffer.from(count.toString()).toString('base64'),
+    content: Buffer.from(" ").toString('base64'),
     // countfile must request the specific week branch
     sha: countfile.data.sha,
-    branch: branch,
+    // branch: branch,
     committer: {
       name: `counselorbot`,
       email: "info@bitproject.org",
@@ -44,21 +67,32 @@ const newBranch = async (context, branch, count) => {
   console.log("Successfully updated!")
 }
 
-const deleteFile = async (context) => {
+const deleteFile = async (context, installation) => {
+  let file = await data.getFileContent(context, ".github/workflows/main.yml");
   try {
-    let file = await data.getFileContent(context, ".github/workflows/main.yml");
-    await context.octokit.repos.deleteFile({
-      owner: context.payload.repository.owner.login,
-      repo: context.payload.repository.name,
-      path: ".github/workflows/main.yml",
-      message: "Delete workflow",
-      sha: file[0].data.sha,
-    });
+    if (installation === "installation") {
+      await context.octokit.repos.deleteFile({
+        owner: context.payload.installation.account.login,
+        repo: context.payload.repositories[0].name,
+        path: ".github/workflows/main.yml",
+        message: "Delete workflow",
+        sha: file[0].data.sha,
+      });
+    }
+    else {
+      await context.octokit.repos.deleteFile({
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        path: ".github/workflows/main.yml",
+        message: "Delete workflow",
+        sha: file[0].data.sha,
+      });
+    }
+
   } catch (e) {
     console.log("Error: had trouble deleting workflow");
     console.log(e);
   }
-
 }
 
 const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, context) => {
@@ -68,11 +102,12 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
   console.log(count)
 
   try {
-    let mainfile = await data.getFileContent(context, ".bit/.progress")
+    let mainfile = await data.getFileContent(context, ".github/workflows/README.md")
     const mainupdate = context.issue({
-      path: ".bit/.progress",
+      path: ".github/workflows/README.md",
       message: "Update progress",
-      content: Buffer.from(count.toString()).toString('base64'),
+      // content: Buffer.from(count.toString()).toString('base64'),
+      content: Buffer.from(" ").toString('base64'),
       // countfile must request the specific week branch
       sha: mainfile[0].data.sha,
       committer: {
@@ -89,18 +124,19 @@ const updateFiles = async (typeOfStep, moveOn, count, configyml, branchName, con
 
     if (branchName != null) {
       const responseBody = context.issue({
-        path: ".bit/.progress",
+        path: ".github/workflows/README.md",
         ref: branchName
       });
       countfile = await context.octokit.repos.getContent(responseBody);
 
       const update = context.issue({
-        path: ".bit/.progress",
+        path: ".github/workflows/README.md",
         message: "Update progress",
-        content: Buffer.from(count.toString()).toString('base64'),
+        // content: Buffer.from(count.toString()).toString('base64'),
+        content: Buffer.from(" ").toString('base64'),
         // countfile must request the specific week branch
         sha: countfile.data.sha,
-        branch: branchName,
+        // branch: branchName,
         committer: {
           name: `counselorbot`,
           email: "info@bitproject.org",
@@ -261,7 +297,6 @@ const workEvaluation = async (typeOfStep, context, configyml, count, issueNo) =>
   if (typeOfStep[0] == "checks") {
     console.log("Checking checks")
     res = await evaluation.checks(context, issueNo)
-
   } else if (typeOfStep[0] == "IssueComment") {
     console.log("Checking comment")
     res = await evaluation.IssueComment(context)
@@ -275,13 +310,27 @@ const workEvaluation = async (typeOfStep, context, configyml, count, issueNo) =>
   return res
 }
 
-const startLab = async (context, configyml) => {
+const startLab = async (context, configyml, installation) => {
+  let owner;
+  let repo;
+  let install_url;
+  if (installation === "installation") {
+    owner = context.payload.installation.account.login;
+    repo = context.payload.repositories[0].name;
+    install_url = context.payload.installation.account.html_url;
+  }
+  else {
+    owner = context.payload.repository.owner.login
+    repo = context.payload.repository.name
+    install_url = context.payload.repository.html_url;
+  }
+
   var gqlrequest = `
     mutation startCourse {
     insert_course_analytics(
         objects: {
-        repo: "${context.payload.repository.html_url}", 
-        user: "${context.payload.repository.owner.login}"
+        repo: "${repo}", 
+        user: "${owner}"
     }) {
         returning {
         id
@@ -291,22 +340,16 @@ const startLab = async (context, configyml) => {
     `
   console.log(await gql.queryData(gqlrequest))
 
-  const attributes = { type: 'Start Camp', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url }
-  // // newrelic.recordCustomEvent("CabinGithub", attributes)
 
-  // mixpanel.track('Start Camp', {
-  //   'distinct_id': context.payload.repository.owner.login,
-  //   'user': context.payload.repository.owner.login,
-  //   'repo': context.payload.repository.html_url
-  // });
 
   try {
     await context.octokit.repos.createOrUpdateFileContents({
-      owner: context.payload.repository.owner.login,
-      repo: context.payload.repository.name,
-      path: ".bit/.progress",
+      owner: owner,
+      repo: repo,
+      path: ".github/workflows/README.md",
       message: "Track progress",
-      content: Buffer.from(JSON.stringify(0)).toString('base64'),
+      // content: Buffer.from(JSON.stringify(0)).toString('base64'),
+      content: Buffer.from(" ").toString('base64'),
       committer: {
         name: `counselorbot`,
         email: "info@bitproject.org",
@@ -328,11 +371,11 @@ const startLab = async (context, configyml) => {
           insert_users_progress(
           objects: {
               path: "${path}", 
-              repo: "${context.payload.repository.html_url}", 
+              repo: "${install_url}", 
               title: "${configyml.steps[0].title}", 
-              user: "${context.payload.repository.owner.login}",
+              user: "${owner}",
               count: 0,
-              repoName: "${context.payload.repository.name}"
+              repoName: "${repo}"
           }
           ) {
           returning {
@@ -345,19 +388,7 @@ const startLab = async (context, configyml) => {
     console.log(res)
 
     //log first step in // newrelic
-    const attributes = { type: 'Start New Step', user: context.payload.repository.owner.login, repo: context.payload.repository.html_url, repoName: context.payload.repository.name, title: configyml.steps[0].title, path: path, count: 0 }
-    // newrelic.recordCustomEvent("CabinGithub", attributes)
 
-    //log in mixpanel first step
-    // mixpanel.track('Start First Step', {
-    //   'distinct_id': context.payload.repository.owner.login,
-    //   'user': context.payload.repository.owner.login,
-    //   'repo': context.payload.repository.html_url,
-    //   'repoName': context.payload.repository.name,
-    //   'title': configyml.steps[0].title,
-    //   'path': path,
-    //   'count': 0
-    // });
   } catch (e) {
     console.log(e)
   }
@@ -368,25 +399,35 @@ const startLab = async (context, configyml) => {
 
   // start lab by executing what is in the before portion of config.yml
   let response = await context.octokit.repos.getContent({
-    owner: context.payload.repository.owner.login,
-    repo: context.payload.repository.name,
+    owner: owner,
+    repo: repo,
     path: path,
   });
 
   response = Buffer.from(response.data.content, 'base64').toString()
   return await context.octokit.issues.create({
-    owner: context.payload.repository.owner.login,
-    repo: context.payload.repository.name,
+    owner: owner,
+    repo: repo,
     title: configyml.before[0].title,
     body: data.parseTable(response),
   })
 }
 
-const workFlow = async (context) => {
+const workFlow = async (context, installation) => {
+  let owner;
+  let repo;
+  if (installation === "installation") {
+    owner = context.payload.installation.account.login
+    repo = context.payload.repositories[0].name
+  }
+  else {
+    owner = context.payload.repository.owner.login
+    repo = context.payload.repository.name
+  }
   console.log("Getting files")
   let files = await context.octokit.repos.getContent({
-    owner: context.payload.repository.owner.login,
-    repo: context.payload.repository.name,
+    owner: owner,
+    repo: repo,
     path: ".bit/workflows"
   });
 
@@ -400,8 +441,8 @@ const workFlow = async (context) => {
       console.log("Getting file " + i)
       console.log(files.data[i])
       await context.octokit.repos.createOrUpdateFileContents({
-        owner: context.payload.repository.owner.login,
-        repo: context.payload.repository.name,
+        owner: owner,
+        repo: repo,
         path: `.github/workflows/${files.data[i].name}`,
         message: "Start workflows",
         content: body,
@@ -421,15 +462,6 @@ const workFlow = async (context) => {
     }
   }
 }
-
-
-/*
-0) get into the cloudwatch logs for this lambda
-1) replace all of the .bit/workflows with the first file copied several times and see if succeeds
-2) replace the first file with one 100x larger and see if it fails
-3) increase the memory allocation for the Lambda
-*/
-
 
 const approvePr = async (context) => {
   try {
@@ -466,12 +498,21 @@ const checkForMergeNext = async (context, count, configyml) => {
   }
 }
 
-
-const protectBranch = async (context) => {
+const protectBranch = async (context, installation) => {
+  let owner;
+  let repo;
+  if (installation === "installation") {
+    owner = context.payload.installation.account.login
+    repo = context.payload.repositories[0].name
+  }
+  else {
+    owner = context.payload.repository.owner.login
+    repo = context.payload.repository.name
+  }
   console.log("protecting")
   await context.octokit.repos.updateBranchProtection({
-    "owner": context.payload.repository.owner.name,
-    "repo": context.payload.repository.name,
+    "owner": owner,
+    "repo": repo,
     "branch": "main",
     "required_status_checks": null,
     "required_status_checks.strict": null,
@@ -484,6 +525,15 @@ const protectBranch = async (context) => {
   })
 }
 
+const cancelRecentWorkflow = async (context) => {
+  // list recent workflow runs
+  await context.octokit.actions.listWorkflowRuns({
+    owner: context.payload.repository.owner.name,
+    repo: context.payload.repository.name,
+    workflow_id,
+  });
+}
+
 exports.startLab = startLab
 exports.workEvaluation = workEvaluation
 exports.nextStep = nextStep
@@ -493,3 +543,4 @@ exports.updateFiles = updateFiles
 exports.newBranch = newBranch
 exports.protectBranch = protectBranch
 exports.checkForMergeNext = checkForMergeNext
+exports.cancelRecentWorkflow = cancelRecentWorkflow

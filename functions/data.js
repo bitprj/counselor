@@ -86,25 +86,36 @@ const findStep = async (context) => {
   return count
 }
 
-const yamlFile = async (context) => {
+const yamlFile = async (context, installation) => {
+  var yamlfile;
   try {
-    console.log("trying to get yaml")
 
-    console.log(context.payload.repository.owner.login)
-    console.log(context.payload.repository.name)
+    if (installation === "installation") {
+      yamlfile = await context.octokit.repos.getContent({
+        owner: context.payload.installation.account.login,
+        repo: context.payload.repositories[0].name,
+        path: ".bit/config.yml",
+      });
+    }
+    else {
+      console.log("trying to get yaml")
+
+      console.log(context.payload.repository.owner.login)
+      console.log(context.payload.repository.name)
 
 
-    console.log(context);
-    console.log(context.octokit);
+      console.log(context.octokit);
 
-    var yamlfile = await context.octokit.repos.getContent({
-      owner: context.payload.repository.owner.login,
-      repo: context.payload.repository.name,
-      path: ".bit/config.yml",
-    });
+      yamlfile = await context.octokit.repos.getContent({
+        owner: context.payload.repository.owner.login,
+        repo: context.payload.repository.name,
+        path: ".bit/config.yml",
+      });
 
-    console.log("we got the yaml")
-    // console.log(yamlfile)
+      console.log("we got the yaml")
+      // console.log(yamlfile)
+    }
+
   } catch (e) {
     console.log("Error with getting content of yaml");
     console.log(e)
