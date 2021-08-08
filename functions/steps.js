@@ -1,6 +1,7 @@
 const data = require('./data.js');
 const gql = require('./graphql.js');
 const evaluation = require('./evaluation.js');
+const fetch = require('node-fetch');
 // const // newrelic = require('// newrelic');
 
 // grab the Mixpanel factory
@@ -534,6 +535,75 @@ const cancelRecentWorkflow = async (context) => {
   });
 }
 
+
+const provideHelp = async (context) => {
+  const endpoint = process.env.QNA_ENDPOINT;
+  let commentBody = context.payload.comment.body;
+  let ask = commentBody.substring("[HELP] ".length);
+
+
+  let resp = await fetch(endpoint, {
+    body: `{'question':'${ask}'}`,
+    headers: {
+      Authorization: `EndpointKey ${process.env.QNA_ENDPOINT_KEY}`,
+      "Content-Type": "application/json"
+    },
+    method: "POST"
+  })
+  let data = await resp.json();
+  let answer = data.answers[0].answer;
+  // throw new Error(answer);
+
+  // create the issue comment
+
+  if (answer === "No good match found in KB.") {
+    // ask instructor for help
+    context.octokit.issues.createComment({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      issue_number: context.payload.issue.number,
+      body: `[ANSWER] Please contact your instructor on Slack for help!`,
+    });
+  }
+  else {
+    context.octokit.issues.createComment({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      issue_number: context.payload.issue.number,
+      body: `[ANSWER] ${answer}`,
+    });
+  }
+}
+
+const checkIssueClosed = async (context) => {
+  if (context.payload.sender.login != "counselorbot-serverless-pro-max[bot]") {
+    // list all issue comments
+    const issuesComments = await context.octokit.issues.listComments({
+      owner: context.payload.repository.owner.login,
+      repo: context.payload.repository.name,
+      issue_number: context.payload.issue.number,
+    });
+
+
+    // reopen the issue of the last comment is not closed via oauth
+    try {
+      if (issuesComments.data.length == 0 || issuesComments.data[issuesComments.data.length - 1].body != "closed via oauth") {
+        await context.octokit.issues.update({
+          owner: context.payload.repository.owner.login,
+          repo: context.payload.repository.name,
+          issue_number: context.payload.issue.number,
+          state: "open"
+        })
+      }
+    }
+    catch (e) {
+      console.log("error!!!")
+    }
+
+  }
+}
+
+
 exports.startLab = startLab
 exports.workEvaluation = workEvaluation
 exports.nextStep = nextStep
@@ -544,3 +614,5 @@ exports.newBranch = newBranch
 exports.protectBranch = protectBranch
 exports.checkForMergeNext = checkForMergeNext
 exports.cancelRecentWorkflow = cancelRecentWorkflow
+exports.provideHelp = provideHelp;
+exports.checkIssueClosed = checkIssueClosed;

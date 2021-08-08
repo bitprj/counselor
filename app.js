@@ -5,7 +5,6 @@
 
 const data = require('./functions/data.js');
 const steps = require('./functions/steps.js');
-
 var start;
 
 module.exports = (app) => {
@@ -14,32 +13,7 @@ module.exports = (app) => {
   app.on('issues.closed', async (context) => {
     // check if the bot closed the issue
     console.log("issue has been closed");
-    if (context.payload.sender.login != "counselorbot-serverless-pro-max[bot]") {
-      // list all issue comments
-      const issuesComments = await context.octokit.issues.listComments({
-        owner: context.payload.repository.owner.login,
-        repo: context.payload.repository.name,
-        issue_number: context.payload.issue.number,
-      });
-
-
-      // reopen the issue of the last comment is not closed via oauth
-      try {
-        if (issuesComments.data.length == 0 || issuesComments.data[issuesComments.data.length - 1].body != "closed via oauth") {
-          await context.octokit.issues.update({
-            owner: context.payload.repository.owner.login,
-            repo: context.payload.repository.name,
-            issue_number: context.payload.issue.number,
-            state: "open"
-          })
-        }
-      }
-      catch (e) {
-        console.log("error!!!")
-        throw new Error(e);
-      }
-
-    }
+    main(context, "issues.closed");
   })
 
 
@@ -87,7 +61,13 @@ module.exports = (app) => {
 
   app.on('issue_comment.created', async (context) => {
     console.log("Issue comment created")
-    if (context.payload.sender.login != "counselorbot[bot]" && context.payload.comment.body != "closed via oauth") {
+
+    let commentBody = context.payload.comment.body;
+    if (commentBody.startsWith("[HELP]")) {
+      // user wants help from counselor
+      main(context, 'help');
+    }
+    else if (context.payload.sender.login != "counselorbot-serverless-pro-max[bot]" && commentBody != "closed via oauth" && !(commentBody.startsWith("[ANSWER]"))) {
       main(context, 'issue_comment.created');
     }
   });
@@ -139,10 +119,17 @@ async function main(context, event) {
     console.log("create event")
     await steps.newBranch(context, context.payload.ref, currentStep);
   }
-  if (event == "pull_request.ready_for_review") {
+  else if (event == "pull_request.ready_for_review") {
     // for starting off step 1 ready for review
     console.log("Calling checkForMergenext in app.js")
     await steps.checkForMergeNext(context, currentStep, configData);
+  }
+  else if (event == "help") {
+    // get the help msg from the body
+    await steps.provideHelp(context);
+  }
+  else if (event == "issues.closed") {
+    await steps.checkIssueClosed(context);
   }
   else {
     // console.log(currentStep, configData, event)
