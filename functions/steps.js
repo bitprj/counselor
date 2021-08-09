@@ -541,9 +541,12 @@ const provideHelp = async (context) => {
   let commentBody = context.payload.comment.body;
   let ask = commentBody.substring("[HELP] ".length);
 
+  let body = {
+    question: ask
+  };
 
   let resp = await fetch(endpoint, {
-    body: `{'question':'${ask}'}`,
+    body: JSON.stringify(body),
     headers: {
       Authorization: `EndpointKey ${process.env.QNA_ENDPOINT_KEY}`,
       "Content-Type": "application/json"
