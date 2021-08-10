@@ -12,60 +12,60 @@ const fetch = require('node-fetch');
 
 const newBranch = async (context, branch, count) => {
 
-  // code prevents two workflows from running and failing
-  const runs = await context.octokit.actions.listWorkflowRunsForRepo({
-    owner: context.payload.repository.owner.login,
-    repo: context.payload.repository.name,
-    per_page: 1
-  });
+  // // code prevents two workflows from running and failing
+  // const runs = await context.octokit.actions.listWorkflowRunsForRepo({
+  //   owner: context.payload.repository.owner.login,
+  //   repo: context.payload.repository.name,
+  //   per_page: 1
+  // });
 
-  console.log(JSON.stringify(runs))
-  const id = runs.data.workflow_runs[0].id;
+  // console.log(JSON.stringify(runs))
+  // const id = runs.data.workflow_runs[0].id;
 
-  await context.octokit.actions.cancelWorkflowRun({
-    owner: context.payload.repository.owner.login,
-    repo: context.payload.repository.name,
-    run_id: id,
-  });
+  // await context.octokit.actions.cancelWorkflowRun({
+  //   owner: context.payload.repository.owner.login,
+  //   repo: context.payload.repository.name,
+  //   run_id: id,
+  // });
 
-  console.log(id);
-
-
-  // [DELETE] .progress information
-
-  const responseBody = context.issue({
-    path: ".github/workflows/README.md",
-    ref: branch
-  });
-
-  try {
-    countfile = await context.octokit.repos.getContent(responseBody);
-    console.log(countfile)
-  } catch (e) {
-    return null
-  }
+  // console.log(id);
 
 
-  const update = context.issue({
-    path: ".github/workflows/README.md",
-    message: "Update progress",
-    // content: Buffer.from(count.toString()).toString('base64'),
-    content: Buffer.from(" ").toString('base64'),
-    // countfile must request the specific week branch
-    sha: countfile.data.sha,
-    // branch: branch,
-    committer: {
-      name: `counselorbot`,
-      email: "info@bitproject.org",
-    },
-    author: {
-      name: `counselorbot`,
-      email: "info@bitproject.org",
-    },
-  });
-  console.log("Attempting to update...")
-  await context.octokit.repos.createOrUpdateFileContents(update)
-  console.log("Successfully updated!")
+  // // [DELETE] .progress information
+
+  // const responseBody = context.issue({
+  //   path: ".github/workflows/README.md",
+  //   ref: branch
+  // });
+
+  // try {
+  //   countfile = await context.octokit.repos.getContent(responseBody);
+  //   console.log(countfile)
+  // } catch (e) {
+  //   return null
+  // }
+
+
+  // const update = context.issue({
+  //   path: ".github/workflows/README.md",
+  //   message: "Update progress",
+  //   // content: Buffer.from(count.toString()).toString('base64'),
+  //   content: Buffer.from(" ").toString('base64'),
+  //   // countfile must request the specific week branch
+  //   sha: countfile.data.sha,
+  //   // branch: branch,
+  //   committer: {
+  //     name: `counselorbot`,
+  //     email: "info@bitproject.org",
+  //   },
+  //   author: {
+  //     name: `counselorbot`,
+  //     email: "info@bitproject.org",
+  //   },
+  // });
+  // console.log("Attempting to update...")
+  // await context.octokit.repos.createOrUpdateFileContents(update)
+  // console.log("Successfully updated!")
 }
 
 const deleteFile = async (context, installation) => {
@@ -539,7 +539,7 @@ const cancelRecentWorkflow = async (context) => {
 const provideHelp = async (context) => {
   const endpoint = process.env.QNA_ENDPOINT;
   let commentBody = context.payload.comment.body;
-  let ask = commentBody.substring("[HELP] ".length);
+  let ask = commentBody.substring("@counselorbot ".length);
 
   let body = {
     question: ask

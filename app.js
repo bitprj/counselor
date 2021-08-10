@@ -63,7 +63,7 @@ module.exports = (app) => {
     console.log("Issue comment created")
 
     let commentBody = context.payload.comment.body;
-    if (commentBody.startsWith("[HELP]")) {
+    if (commentBody.toLowerCase().startsWith("@counselorbot")) {
       // user wants help from counselor
       main(context, 'help');
     }
