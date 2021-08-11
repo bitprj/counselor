@@ -606,6 +606,15 @@ const checkIssueClosed = async (context) => {
   }
 }
 
+const closeCurrentIssue = async (context) => {
+  // close the current issue
+  await context.octokit.issues.update({
+    owner: context.payload.repository.owner.login,
+    repo: context.payload.repository.name,
+    issue_number: context.payload.issue.number,
+    state: "closed"
+  });
+}
 
 exports.startLab = startLab
 exports.workEvaluation = workEvaluation
@@ -619,3 +628,4 @@ exports.checkForMergeNext = checkForMergeNext
 exports.cancelRecentWorkflow = cancelRecentWorkflow
 exports.provideHelp = provideHelp;
 exports.checkIssueClosed = checkIssueClosed;
+exports.closeCurrentIssue = closeCurrentIssue;

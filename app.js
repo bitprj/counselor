@@ -33,6 +33,7 @@ module.exports = (app) => {
 
       // if (start && context.payload.commits[0].added[0] != ".bit/.progress") {
       if (start) {
+        await steps.closeCurrentIssue(context);
         let configData = await data.yamlFile(context);
         console.log("protecting")
         console.log("Deleting file...")
@@ -48,6 +49,24 @@ module.exports = (app) => {
       console.log(e)
     }
   });
+
+  app.on('issues.opened', async (context) => {
+    console.log("issue opened");
+    let issueName = context.payload.issue.title;
+    if (issueName.toLowerCase() === "start course") {
+      // user opens issue to start the course
+      let configData = await data.yamlFile(context);
+      await steps.closeCurrentIssue(context);
+      console.log("protecting")
+      console.log("Deleting file...")
+      await steps.deleteFile(context);
+      await steps.startLab(context, configData);
+      console.log("Committing workflow files")
+      await steps.workFlow(context);
+      await steps.protectBranch(context); // can't merge
+    }
+
+  })
 
   app.on('pull_request.ready_for_review', async (context) => {
     console.log("pull request ready")
