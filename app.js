@@ -14,7 +14,7 @@ module.exports = (app) => {
     // check if the bot closed the issue
     console.log("issue has been closed");
     main(context, "issues.closed");
-  })
+  }) // test
 
 
   app.on("push", async (context) => {
