@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # This is a GitHub App Manifest. These settings will be used by default when
 # initially configuring your GitHub App.
 #
@@ -135,3 +136,11 @@ default_permissions:
 # Set to true when your GitHub App is available to the public or false when it is only accessible to the owner of the app.
 # Default: true
 # public: false
+=======
+default_events:
+  - issues
+
+default_permissions:
+  issues: write
+  metadata: read
+>>>>>>> azure-function-bot/main
