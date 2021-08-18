@@ -1,9 +1,7 @@
 const fetch = require("node-fetch")
 
-// const HASURA_ENDPOINT = process.env.HASURA_ENDPOINT;
-const HASURA_ENDPOINT = "https://endless-flounder-97.hasura.app/v1/graphql";
-// const secret = process.env.HASURA_ADMIN_SECRET;
-const secret = "wzurCqQMy8lPycePA6PYolO8c9fTgJ2g";
+const HASURA_ENDPOINT = process.env.HASURA_ENDPOINT;
+const HASURA_ADMIN_SECRET = process.env.HASURA_ADMIN_SECRET;
 
 const queryData = async (queryString) => {
   console.log(queryString)
@@ -11,7 +9,7 @@ const queryData = async (queryString) => {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-hasura-admin-secret': secret,
+      'x-hasura-admin-secret': HASURA_ADMIN_SECRET,
     },
     body: JSON.stringify({ query: queryString })
   });
