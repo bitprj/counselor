@@ -4,8 +4,7 @@
   "private": true,
   "description": "Probot & Azure Functions example",
   "scripts": {
-    "start": "probot run ./app.js",
-    "test": "node test.js"
+    "start": "probot run ./app.js"
   },
   "author": "Gregor Martynus (https://twitter.com/gr2m)",
   "license": "ISC",
