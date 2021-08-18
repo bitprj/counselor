@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # camp.dev
 
 > A GitHub App built with [Probot](https://github.com/probot/probot) that This Github App creates BitLabs and guides students through courses.&#x27;
@@ -31,3 +32,7 @@ For more, check out the [Contributing Guide](CONTRIBUTING.md).
 ## License
 
 [ISC](LICENSE) © 2021 Bit Project <info@bitproject.org>
+=======
+# CounselorBot Serverless Pro Max 🤖
+Deployed on Azure functions!
+>>>>>>> azure-function-bot/main
