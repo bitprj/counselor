@@ -24,8 +24,14 @@ const checks = async (context, issueNo) => {
     }
     `
 
-    let result = await gql.queryData(queryString)
-    let error = await result.data.users_errors[0].error;
+    let result = await gql.queryData(queryString);
+    let error = "";
+
+    try {
+      error = await result.data.users_errors[0].error;
+    } catch (e) {
+      error = "Oops! Something went wrong 😅! Please check the GitHub action run for more information.";
+    }
 
     console.log(error);
 
