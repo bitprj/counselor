@@ -11,7 +11,7 @@
   "repository": "github:probot/example-azure-function",
   "dependencies": {
     "@octokit/core": "^3.2.5",
-    "@probot/adapter-azure-functions": "^1.0.12",
+    "@probot/adapter-azure-functions": "^1.0.22",
     "body-parser": "^1.19.0",
     "js-yaml": "^4.0.0",
     "node-fetch": "^2.6.1",
