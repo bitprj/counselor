@@ -19,7 +19,7 @@
   },
   "devDependencies": {
     "@azure/functions": "^1.2.3",
-    "nock": "^13.1.1",
+    "nock": "^13.3.0",
     "smee-client": "^1.2.2",
     "uvu": "^0.5.1"
   },
